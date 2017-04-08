@@ -1,3 +1,5 @@
+// FIXME Remove once not dev anymore
+#![allow(dead_code, unused_imports)]
 #[macro_use]
 extern crate slog;
 extern crate slog_term;
@@ -16,6 +18,7 @@ use futures::{Future, Stream};
 use futures::future;
 use slog::*;
 use hyper::{Client, Uri, Method, Chunk, Error};
+use hyper::header::{Authorization, Accept, UserAgent, qitem};
 use hyper::client::Request;
 use hyper::client::FutureResponse;
 use tokio_core::reactor::Core;
@@ -24,39 +27,21 @@ fn main() {
     let logger = create_loggers();
     info!(logger, "Application started");
 
-    let urlStr = String::from("https://hacker-news.firebaseio.com/v0/item/2921983.json");
-    let url = urlStr.parse::<hyper::Uri>().unwrap();
     let mut core = Core::new().unwrap();
     let handle = core.handle();
     let client = Client::configure()
+        // Does not check the validity of certificate
         .connector(hyper_tls::HttpsConnector::new(4, &handle))
         .build(&handle);
-    let endpoint = hn_news::build_default();
+    let endpoint = HnNews::build_default();
 
-    let work = client.get(url).and_then(|res| {
-        println!("Status: {}", res.status());
-        println!("Headers:\n{}", res.headers());
-        res.body().for_each(|chunk| {
-            ::std::io::stdout()
-                .write_all(&chunk)
-                .map(|_| ())
-                .map_err(From::from)
-        })
-    });
-    let url2 = String::from("https://httpbin.org/post").parse::<hyper::Uri>().unwrap();
-    let request = Request::new(Method::Post, url2);
-    core.run(consume_request(&client, request))
-        .and_then(|res| {
-            info!(logger,
-                  format!("Request finished with status {}", res.status()));
-            Ok("ok") // TODO This should handle failures
-        });
     let work = endpoint.request_top_story_ids(&client)
         .and_then(|res| {
             info!(logger,
                   format!("Request to {} finished with status {}",
                           endpoint.get_top_stories_path(),
                           res.status()));
+            // Consists of Chunks which is basically a vector of bytes (Vec<u8>)
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
                     v.extend(&chunk[..]);
@@ -68,7 +53,9 @@ fn main() {
         });
     let result = core.run(work).unwrap();
     println!("{}", result);
-    // core.run(work).unwrap();
+}
+fn common_headers(req: &mut Request) {
+    req.headers_mut().set(UserAgent(String::from("rust-api")))
 }
 fn consume_request(client: &Client<hyper_tls::HttpsConnector>, request: Request) -> FutureResponse {
     client.request(request)
@@ -80,7 +67,7 @@ fn create_loggers() -> Logger {
     return root_logger;
 }
 
-struct hn_news {
+struct HnNews {
     base_url: String,
     top_news_suffix: String,
     item_suffix: String,
@@ -88,9 +75,9 @@ struct hn_news {
     json_suffix: String,
 }
 
-impl hn_news {
-    pub fn build_default() -> hn_news {
-        let e = hn_news {
+impl HnNews {
+    pub fn build_default() -> HnNews {
+        let e = HnNews {
             base_url: String::from("https://hacker-news.firebaseio.com/v0/"),
             top_news_suffix: String::from("topstories"),
             item_suffix: String::from("item/"),
@@ -112,7 +99,8 @@ impl hn_news {
 
     fn request_top_story_ids(&self, client: &Client<hyper_tls::HttpsConnector>) -> FutureResponse {
         let url = parse_url_from_str(&self.get_top_stories_path());
-        let request = Request::new(Method::Get, url);
+        let mut request = Request::new(Method::Get, url);
+        common_headers(&mut request);
         client.request(request)
     }
 }
@@ -122,9 +110,9 @@ fn combine_strings(strings: Vec<&str>) -> String {
     combine
 }
 
-fn parse_url_from_str(urlStr: &str) -> Uri {
-    let urlStr = String::from(urlStr);
-    let url = urlStr.parse::<hyper::Uri>().unwrap();
+fn parse_url_from_str(url_str: &str) -> Uri {
+    let url_str = String::from(url_str);
+    let url = url_str.parse::<hyper::Uri>().unwrap();
     url
 }
 
