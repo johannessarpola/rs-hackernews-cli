@@ -60,6 +60,8 @@ fn main() {
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
                     v.extend(&chunk[..]);
+                    // _ = It's a placeholder. In this context, it means that there isn't enough information for the compiler to infer a type.
+                    // http://stackoverflow.com/questions/37215739/what-does-it-mean-to-instantiate-a-rust-generic-with-an-underscore
                     future::ok::<_, Error>(v)
                 })
                 .map(|chunks| String::from_utf8(chunks).unwrap())
