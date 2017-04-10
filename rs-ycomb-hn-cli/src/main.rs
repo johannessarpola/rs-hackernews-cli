@@ -159,69 +159,74 @@ fn parse_url_from_str(url_str: &str) -> Uri {
     url
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-#[test]
-fn parse_url_from_str_test() {
-    let url = parse_url_from_str("http://www.google.fi");
-    assert_eq!("http", url.scheme().unwrap());
-    assert_eq!("www.google.fi", url.authority().unwrap());
-}
+    #[test]
+    fn parse_url_from_str_test() {
+        let url = parse_url_from_str("http://www.google.fi");
+        assert_eq!("http", url.scheme().unwrap());
+        assert_eq!("www.google.fi", url.authority().unwrap());
+    }
 
-#[test]
-fn combine_strings_test() {
-    let a = "Abc";
-    let b = "Abc";
-    let mut vec = Vec::new();
-    vec.push(a);
-    vec.push(b);
-    assert_eq!("AbcAbc", combine_strings(vec));
-    assert!(a.len() > 1);
-    assert!(b.len() > 1);
-}
+    #[test]
+    fn combine_strings_test() {
+        let a = "Abc";
+        let b = "Abc";
+        let mut vec = Vec::new();
+        vec.push(a);
+        vec.push(b);
+        assert_eq!("AbcAbc", combine_strings(vec));
+        assert!(a.len() > 1);
+        assert!(b.len() > 1);
+    }
 
-#[test]
-fn hn_item_serde_test() {
-    use std::fs::File;
-    use std::io::prelude::*;
-    let mut contents = String::new();
-    File::open("res/test/item.json")
-        .and_then(|mut file| file.read_to_string(&mut contents))
-        .unwrap();
-    let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
-    assert_eq!(71, deserialized.descendants);
-    assert_eq!("dhouston", deserialized.by);
-    assert_eq!(8863, deserialized.id);
-    assert_eq!(111, deserialized.score);
-    assert_eq!(1175714200.0f64, deserialized.time);
-    assert_eq!("My YC app: Dropbox - Throw away your USB drive",
-               deserialized.title);
-    assert_eq!("story", deserialized.type_str);
-    assert_eq!("http://www.getdropbox.com/u/2/screencast.html",
-               deserialized.url);
-}
-#[test]
-fn hn_top_stories_serde_test() {
-    use std::fs::File;
-    use std::io::prelude::*;
-    let mut contents = String::new();
-    File::open("res/test/top-stories.json")
-        .and_then(|mut file| file.read_to_string(&mut contents))
-        .unwrap();
-    let deserialized: HnTopStories = serde_json::from_str(&contents).unwrap();
-    assert!(deserialized.values.len() > 3);
-}
-#[test]
-fn hn_user_serde_test() {
-    use std::fs::File;
-    use std::io::prelude::*;
-    let mut contents = String::new();
-    File::open("res/test/user.json")
-        .and_then(|mut file| file.read_to_string(&mut contents))
-        .unwrap();
-    let deserialized: HnUser = serde_json::from_str(&contents).unwrap();
-    assert_eq!("This is a test", deserialized.about);
-    assert_eq!(1173923446.0f64, deserialized.created);
-    assert_eq!("jl", deserialized.id);
-    assert_eq!(3496, deserialized.karma);
-    assert!(deserialized.submitted.len() > 3);
+    #[test]
+    fn hn_item_serde_test() {
+        use std::fs::File;
+        use std::io::prelude::*;
+        let mut contents = String::new();
+        File::open("res/test/item.json")
+            .and_then(|mut file| file.read_to_string(&mut contents))
+            .unwrap();
+        let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
+        assert_eq!(71, deserialized.descendants);
+        assert_eq!("dhouston", deserialized.by);
+        assert_eq!(8863, deserialized.id);
+        assert_eq!(111, deserialized.score);
+        assert_eq!(1175714200.0f64, deserialized.time);
+        assert_eq!("My YC app: Dropbox - Throw away your USB drive",
+                   deserialized.title);
+        assert_eq!("story", deserialized.type_str);
+        assert_eq!("http://www.getdropbox.com/u/2/screencast.html",
+                   deserialized.url);
+    }
+    #[test]
+    fn hn_top_stories_serde_test() {
+        use std::fs::File;
+        use std::io::prelude::*;
+        let mut contents = String::new();
+        File::open("res/test/top-stories.json")
+            .and_then(|mut file| file.read_to_string(&mut contents))
+            .unwrap();
+        let deserialized: HnTopStories = serde_json::from_str(&contents).unwrap();
+        assert!(deserialized.values.len() > 3);
+    }
+    #[test]
+    fn hn_user_serde_test() {
+        use std::fs::File;
+        use std::io::prelude::*;
+        let mut contents = String::new();
+        File::open("res/test/user.json")
+            .and_then(|mut file| file.read_to_string(&mut contents))
+            .unwrap();
+        let deserialized: HnUser = serde_json::from_str(&contents).unwrap();
+        assert_eq!("This is a test", deserialized.about);
+        assert_eq!(1173923446.0f64, deserialized.created);
+        assert_eq!("jl", deserialized.id);
+        assert_eq!(3496, deserialized.karma);
+        assert!(deserialized.submitted.len() > 3);
+    }
+
 }
