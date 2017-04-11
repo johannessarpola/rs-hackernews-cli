@@ -28,44 +28,6 @@ use hyper::client::Request;
 use hyper::client::FutureResponse;
 use tokio_core::reactor::Core;
 
-#[derive(Serialize)]
-struct HnTopStories {
-    values: Vec<i32>,
-}
-
-
-impl Deserialize for HnTopStories {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer
-    {
-        Deserialize::deserialize(deserializer).map(|arr: Vec<i32>| HnTopStories { values: arr })
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-struct HnItem {
-    by: String,
-    descendants: i32,
-    id: i32,
-    kids: Vec<i32>,
-    title: String,
-    score: i32,
-    time: f64,
-    #[serde(rename(deserialize = "type"))]
-    type_str: String,
-    url: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct HnUser {
-    about: String,
-    created: f64,
-    id: String,
-    karma: i32,
-    submitted: Vec<i32>,
-}
-
-
 fn main() {
     let logger = create_loggers();
     info!(logger, "Application started");
@@ -77,8 +39,16 @@ fn main() {
         .connector(hyper_tls::HttpsConnector::new(4, &handle))
         .build(&handle);
     let endpoint = HnNews::build_default();
+    let response = create_top_stories_closure(&mut core, &endpoint, &client, &logger);
+    println!("{}", response.unwrap());
+}
 
-    let work = endpoint.request_top_story_ids(&client)
+fn create_top_stories_closure(core: &mut Core,
+                              endpoint: &HnNews,
+                              client: &Client<hyper_tls::HttpsConnector>,
+                              logger: &Logger)
+                              -> Result<String, hyper::Error> {
+    let work = endpoint.start_request_top_story_ids(&client)
         .and_then(|res| {
             info!(logger,
                   format!("Request to {} finished with status {}",
@@ -92,13 +62,13 @@ fn main() {
                     // http://stackoverflow.com/questions/37215739/what-does-it-mean-to-instantiate-a-rust-generic-with-an-underscore
                     future::ok::<_, Error>(v)
                 })
-                .map(|chunks| String::from_utf8(chunks).unwrap())
-        });
-    let result = core.run(work).unwrap();
-    println!("{}", result);
+        })
+       .map(|chunks| String::from_utf8(chunks).unwrap());
+       core.run(work)
 }
+
 fn common_headers(req: &mut Request) {
-    req.headers_mut().set(UserAgent(String::from("rust-api")))
+    req.headers_mut().set(UserAgent::new("hyper"));
 }
 fn consume_request(client: &Client<hyper_tls::HttpsConnector>, request: Request) -> FutureResponse {
     client.request(request)
@@ -140,12 +110,50 @@ impl HnNews {
         combine_strings(vec![&self.base_url, &self.item_suffix, id, &self.json_suffix])
     }
 
-    fn request_top_story_ids(&self, client: &Client<hyper_tls::HttpsConnector>) -> FutureResponse {
+    fn start_request_top_story_ids(&self,
+                                   client: &Client<hyper_tls::HttpsConnector>)
+                                   -> FutureResponse {
         let url = parse_url_from_str(&self.get_top_stories_path());
         let mut request = Request::new(Method::Get, url);
         common_headers(&mut request);
         client.request(request)
     }
+}
+
+#[derive(Serialize)]
+struct HnTopStories {
+    values: Vec<i32>,
+}
+
+impl Deserialize for HnTopStories {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer
+    {
+        Deserialize::deserialize(deserializer).map(|arr: Vec<i32>| HnTopStories { values: arr })
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct HnItem {
+    by: String,
+    descendants: i32,
+    id: i32,
+    kids: Vec<i32>,
+    title: String,
+    score: i32,
+    time: f64,
+    #[serde(rename(deserialize = "type"))]
+    type_str: String,
+    url: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct HnUser {
+    about: String,
+    created: f64,
+    id: String,
+    karma: i32,
+    submitted: Vec<i32>,
 }
 
 fn combine_strings(strings: Vec<&str>) -> String {
