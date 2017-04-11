@@ -8,7 +8,6 @@ extern crate slog_term;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate serde;
-
 extern crate futures;
 extern crate hyper;
 extern crate tokio_core;
@@ -22,11 +21,22 @@ use serde::{Serialize, Serializer, Deserialize, Deserializer};
 use futures::{Future, Stream};
 use futures::future;
 use slog::*;
-use hyper::{Client, Uri, Method, Chunk, Error};
+use hyper::{Client, Uri, Method, Chunk, Error, StatusCode};
 use hyper::header::{Authorization, Accept, UserAgent, qitem};
-use hyper::client::Request;
-use hyper::client::FutureResponse;
+use hyper::client::{Request, Response, FutureResponse};
+use hyper_tls::HttpsConnector;
 use tokio_core::reactor::Core;
+mod utils;
+
+///
+/// 'Main' struct which have relevant parts which are use as core elements of the application
+///
+struct Main {
+    core: Core,
+    endpoint: HnNews,
+    client: Client<hyper_tls::HttpsConnector>,
+    logger: Logger,
+}
 
 fn main() {
     let logger = create_loggers();
@@ -36,35 +46,44 @@ fn main() {
     let handle = core.handle();
     let client = Client::configure()
         // Does not check the validity of certificate
-        .connector(hyper_tls::HttpsConnector::new(4, &handle))
+        .connector(HttpsConnector::new(4, &handle))
         .build(&handle);
     let endpoint = HnNews::build_default();
-    let response = create_top_stories_closure(&mut core, &endpoint, &client, &logger);
+
+    let mut app = Main {
+        core: core,
+        endpoint: endpoint,
+        client: client,
+        logger: logger,
+    };
+
+    let response = create_top_stories_closure(&mut app);
     println!("{}", response.unwrap());
 }
+fn get_comments_for_a_story(main: &mut Main) {}
 
-fn create_top_stories_closure(core: &mut Core,
-                              endpoint: &HnNews,
-                              client: &Client<hyper_tls::HttpsConnector>,
-                              logger: &Logger)
-                              -> Result<String, hyper::Error> {
-    let work = endpoint.start_request_top_story_ids(&client)
+fn create_top_stories_closure(main: &mut Main) -> Result<String, hyper::Error> {
+    let logger = &main.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
+    let endpoint = &main.endpoint;
+    let client = &main.client;
+    let work = request_top_story_ids(&client, &endpoint)
         .and_then(|res| {
-            info!(logger,
-                  format!("Request to {} finished with status {}",
-                          endpoint.get_top_stories_path(),
-                          res.status()));
-            // Consists of Chunks which is basically a vector of bytes (Vec<u8>)
+            log_response_status(&logger, &endpoint.get_top_stories_path(), &res.status());
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
                     v.extend(&chunk[..]);
-                    // _ = It's a placeholder. In this context, it means that there isn't enough information for the compiler to infer a type.
-                    // http://stackoverflow.com/questions/37215739/what-does-it-mean-to-instantiate-a-rust-generic-with-an-underscore
                     future::ok::<_, Error>(v)
                 })
         })
-       .map(|chunks| String::from_utf8(chunks).unwrap());
-       core.run(work)
+        .map(|chunks| String::from_utf8(chunks).unwrap());
+
+    let result = main.core.run(work);
+    result
+}
+
+fn log_response_status(logger: &Logger, url: &str, status: &StatusCode) {
+    info!(logger,
+          format!("Request to {} finished with status {}", url, status));
 }
 
 fn common_headers(req: &mut Request) {
@@ -78,6 +97,15 @@ fn create_loggers() -> Logger {
     let drain = slog_term::streamer().build().fuse();
     let root_logger = Logger::root(drain, o!());
     return root_logger;
+}
+
+fn request_top_story_ids(client: &Client<hyper_tls::HttpsConnector>,
+                         endpoints: &HnNews)
+                         -> FutureResponse {
+    let url = utils::parse_url_from_str(&endpoints.get_top_stories_path());
+    let mut request = Request::new(Method::Get, url);
+    common_headers(&mut request);
+    client.request(request)
 }
 
 struct HnNews {
@@ -101,22 +129,13 @@ impl HnNews {
     }
 
     pub fn get_top_stories_path(&self) -> String {
-        combine_strings(vec![&self.base_url, &self.top_news_suffix, &self.json_suffix])
+        utils::combine_strings(vec![&self.base_url, &self.top_news_suffix, &self.json_suffix])
     }
     pub fn get_max_item_path(&self) -> String {
-        combine_strings(vec![&self.base_url, &self.max_item_suffix, &self.json_suffix])
+        utils::combine_strings(vec![&self.base_url, &self.max_item_suffix, &self.json_suffix])
     }
     pub fn get_item_path(&self, id: &str) -> String {
-        combine_strings(vec![&self.base_url, &self.item_suffix, id, &self.json_suffix])
-    }
-
-    fn start_request_top_story_ids(&self,
-                                   client: &Client<hyper_tls::HttpsConnector>)
-                                   -> FutureResponse {
-        let url = parse_url_from_str(&self.get_top_stories_path());
-        let mut request = Request::new(Method::Get, url);
-        common_headers(&mut request);
-        client.request(request)
+        utils::combine_strings(vec![&self.base_url, &self.item_suffix, id, &self.json_suffix])
     }
 }
 
@@ -156,39 +175,9 @@ struct HnUser {
     submitted: Vec<i32>,
 }
 
-fn combine_strings(strings: Vec<&str>) -> String {
-    let combine = strings.join("");
-    combine
-}
-
-fn parse_url_from_str(url_str: &str) -> Uri {
-    let url_str = String::from(url_str);
-    let url = url_str.parse::<hyper::Uri>().unwrap();
-    url
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn parse_url_from_str_test() {
-        let url = parse_url_from_str("http://www.google.fi");
-        assert_eq!("http", url.scheme().unwrap());
-        assert_eq!("www.google.fi", url.authority().unwrap());
-    }
-
-    #[test]
-    fn combine_strings_test() {
-        let a = "Abc";
-        let b = "Abc";
-        let mut vec = Vec::new();
-        vec.push(a);
-        vec.push(b);
-        assert_eq!("AbcAbc", combine_strings(vec));
-        assert!(a.len() > 1);
-        assert!(b.len() > 1);
-    }
 
     #[test]
     fn hn_item_serde_test() {
