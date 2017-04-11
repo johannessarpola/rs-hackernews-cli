@@ -25,7 +25,7 @@ use hyper::{Client, Uri, Method, Chunk, Error, StatusCode};
 use hyper::header::{Authorization, Accept, UserAgent, qitem};
 use hyper::client::{Request, Response, FutureResponse};
 use hyper_tls::HttpsConnector;
-use tokio_core::reactor::Core;
+use tokio_core::reactor::{Core, Handle};
 mod utils;
 
 ///
@@ -38,31 +38,37 @@ struct Main {
     logger: Logger,
 }
 
-fn main() {
+fn create_main() -> Main {
     let logger = create_loggers();
-    info!(logger, "Application started");
-
     let mut core = Core::new().unwrap();
     let handle = core.handle();
-    let client = Client::configure()
-        // Does not check the validity of certificate
-        .connector(HttpsConnector::new(4, &handle))
-        .build(&handle);
+    let client = configure_client(&handle);
     let endpoint = HnNews::build_default();
-
-    let mut app = Main {
+    let mut main = Main {
         core: core,
         endpoint: endpoint,
         client: client,
         logger: logger,
     };
+    main
+}
+fn configure_client(handle: &Handle) -> Client<hyper_tls::HttpsConnector> {
+    Client::configure()
+        // Does not check the validity of certificate
+        .connector(HttpsConnector::new(4, &handle))
+        .build(&handle)
+}
 
-    let response = create_top_stories_closure(&mut app);
+fn main() {
+    let mut main = create_main();
+    info!(&main.logger, "Application started");
+    let response = get_top_story_ids(&mut main);
     println!("{}", response.unwrap());
 }
-fn get_comments_for_a_story(main: &mut Main) {}
 
-fn create_top_stories_closure(main: &mut Main) -> Result<String, hyper::Error> {
+fn get_comments_for_a_story(main: &mut Main, story_id: i32) {}
+
+fn get_top_story_ids(main: &mut Main) -> Result<String, hyper::Error> {
     let logger = &main.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
     let endpoint = &main.endpoint;
     let client = &main.client;
@@ -76,7 +82,6 @@ fn create_top_stories_closure(main: &mut Main) -> Result<String, hyper::Error> {
                 })
         })
         .map(|chunks| String::from_utf8(chunks).unwrap());
-
     let result = main.core.run(work);
     result
 }
