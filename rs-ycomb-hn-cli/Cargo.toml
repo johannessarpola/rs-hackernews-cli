@@ -9,8 +9,8 @@ serde_derive = "0.9.13"
 serde_json= "*"
 futures = "0.1.11"
 futures-cpupool = "0.1"
-hyper = { git = "https://github.com/hyperium/hyper", rev="f05a58a1b2288d30a601b0466bc08a38c5a76054" }
-hyper-tls = { git = "https://github.com/hyperium/hyper-tls", rev="74aefbe500df5bb2d9a87844580b4ac21d49f134" }
+hyper = { git = "https://github.com/hyperium/hyper"}
+hyper-tls = { git = "https://github.com/hyperium/hyper-tls" }
 httparse = "1.0"
 tokio-core = "0.1.6"
 tokio-proto = "0.1"
