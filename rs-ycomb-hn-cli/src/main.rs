@@ -86,6 +86,28 @@ fn get_top_story_ids(main: &mut Main) -> Result<String, hyper::Error> {
     result
 }
 
+fn get_item_by_id(item: &str, main: &mut Main) -> Result<HnItem, hyper::Error> {
+    let logger = &main.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
+    let endpoint = &main.endpoint;
+    let client = &main.client;
+    let work = request_item(&item, &client, &endpoint)
+        .and_then(|res| {
+            log_response_status(&logger, &endpoint.get_item_path(&item), &res.status());
+            res.body()
+                .fold(Vec::new(), |mut v, chunk| {
+                    v.extend(&chunk[..]);
+                    future::ok::<_, Error>(v)
+                })
+        })
+        .map(|chunks| {
+            let s = String::from_utf8(chunks).unwrap();
+            let deserialized: HnItem = serde_json::from_str(&s).unwrap();
+            deserialized
+        });
+    let result = main.core.run(work);
+    result
+}
+
 fn log_response_status(logger: &Logger, url: &str, status: &StatusCode) {
     info!(logger,
           format!("Request to {} finished with status {}", url, status));
@@ -101,13 +123,22 @@ fn consume_request(client: &Client<hyper_tls::HttpsConnector>, request: Request)
 fn create_loggers() -> Logger {
     let drain = slog_term::streamer().build().fuse();
     let root_logger = Logger::root(drain, o!());
-    return root_logger;
+    root_logger
 }
 
 fn request_top_story_ids(client: &Client<hyper_tls::HttpsConnector>,
                          endpoints: &HnNews)
                          -> FutureResponse {
     let url = utils::parse_url_from_str(&endpoints.get_top_stories_path());
+    let mut request = Request::new(Method::Get, url);
+    common_headers(&mut request);
+    client.request(request)
+}
+fn request_item(item: &str,
+                client: &Client<hyper_tls::HttpsConnector>,
+                endpoints: &HnNews)
+                -> FutureResponse {
+    let url = utils::parse_url_from_str(&endpoints.get_item_path(item));
     let mut request = Request::new(Method::Get, url);
     common_headers(&mut request);
     client.request(request)
@@ -229,6 +260,14 @@ mod tests {
         assert_eq!("jl", deserialized.id);
         assert_eq!(3496, deserialized.karma);
         assert!(deserialized.submitted.len() > 3);
+    }
+
+    #[test]
+    fn request_item_test() {
+        let mut main = create_main();
+        let s = String::from("8000");
+        let response = main.core.run(request_item(&s, &main.client, &main.endpoint)).unwrap();
+        assert_eq!(StatusCode::Ok, response.status());
     }
 
 }
