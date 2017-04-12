@@ -191,15 +191,18 @@ impl Deserialize for HnTopStories {
 #[derive(Serialize, Deserialize)]
 struct HnItem {
     by: String,
-    descendants: i32,
+    #[serde(skip_serializing_if="Option::is_none")]
+    descendants: Option<i32>,
     id: i32,
-    kids: Vec<i32>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    kids: Option<Vec<i32>>,
     title: String,
     score: i32,
     time: f64,
     #[serde(rename(deserialize = "type"))]
     type_str: String,
-    url: String,
+    #[serde(skip_serializing_if="Option::is_none")]
+    url: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -224,7 +227,7 @@ mod tests {
             .and_then(|mut file| file.read_to_string(&mut contents))
             .unwrap();
         let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
-        assert_eq!(71, deserialized.descendants);
+        assert_eq!(71, deserialized.descendants.unwrap());
         assert_eq!("dhouston", deserialized.by);
         assert_eq!(8863, deserialized.id);
         assert_eq!(111, deserialized.score);
@@ -233,7 +236,7 @@ mod tests {
                    deserialized.title);
         assert_eq!("story", deserialized.type_str);
         assert_eq!("http://www.getdropbox.com/u/2/screencast.html",
-                   deserialized.url);
+                   deserialized.url.unwrap());
     }
     #[test]
     fn hn_top_stories_serde_test() {
@@ -270,4 +273,16 @@ mod tests {
         assert_eq!(StatusCode::Ok, response.status());
     }
 
+    #[test]
+    fn get_item_by_id_test() {
+        let mut main = create_main();
+        let s = String::from("126809");
+        let hnitem: HnItem = get_item_by_id(&s, &mut main).unwrap();
+        assert!(hnitem.score != 0);
+        assert!(hnitem.id != 0);
+        assert!(!hnitem.type_str.is_empty());
+        assert!(!hnitem.title.is_empty());
+        assert_eq!(126809, hnitem.id);
+
+    }
 }
