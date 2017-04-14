@@ -1,4 +1,4 @@
-use hyper::{Uri, StatusCode};
+use hyper::{Uri};
 
 pub fn combine_strings(strings: Vec<&str>) -> String {
     let combine = strings.join("");

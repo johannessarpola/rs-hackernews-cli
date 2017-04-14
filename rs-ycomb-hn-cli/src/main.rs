@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_imports, unused_mut)] // Unused mut warning is false in this context
+#![allow(dead_code, unused_mut)] // Unused mut warning is false in this context
 #[macro_use]
 extern crate slog;
 extern crate slog_term;
@@ -13,9 +13,6 @@ extern crate tokio_core;
 extern crate hyper_tls;
 extern crate time;
 extern crate rayon;
-
-use std::env;
-use std::io::{self, Write};
 
 mod utils;
 mod models;

@@ -1,18 +1,17 @@
-use hyper::{Client, Uri, Method, Chunk, Error, StatusCode};
-use hyper::header::{Authorization, Accept, UserAgent, qitem};
-use hyper::client::{Request, Response, FutureResponse};
+use hyper::{Client, Method, Error, StatusCode};
+use hyper::header::{UserAgent};
+use hyper::client::{Request, FutureResponse};
 use hyper_tls::HttpsConnector;
 use futures::{Future, Stream};
 use futures::future;
 use serde_json;
 use slog::*;
 use serde::Deserialize;
-use rayon::prelude::*;
 
+use utils::parse_url_from_str;
 use models::*;
 use endpoint::HnNewsEndpoint;
 use app::AppDomain;
-use utils::*;
 
 pub fn get_top_story_ids(app_domain: &mut AppDomain) -> Result<HnTopStories, Error> {
     let logger = &app_domain.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
@@ -71,6 +70,7 @@ fn get_comments_for_item(app_domain: &mut AppDomain, item: &HnItem) -> Option<Ve
             let raw_items = comments.iter()
                 .map(|item_id| (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint)))
                 .map(|(item_id, request_work)| {
+                    // Todo: add some logging for item_id
                     let subtask = request_work
                     .and_then(|response| {
                         response.body()
