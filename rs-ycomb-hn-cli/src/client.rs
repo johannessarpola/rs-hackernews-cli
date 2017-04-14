@@ -1,18 +1,19 @@
 use hyper::{Client, Uri, Method, Chunk, Error, StatusCode};
 use hyper::header::{Authorization, Accept, UserAgent, qitem};
+use hyper::client::{Request, Response, FutureResponse};
 use hyper_tls::HttpsConnector;
+use futures::{Future, Stream};
+use futures::future;
 use serde_json;
+use slog::*;
+use serde::Deserialize;
+
 use models::*;
 use endpoint::HnNewsEndpoint;
 use app::Main;
 use utils::*;
-use app::*;
-use hyper::client::{Request, Response, FutureResponse};
-use futures::{Future, Stream};
-use futures::future;
-use slog::*;
 
-pub fn get_top_story_ids(main: &mut Main) -> Result<String, Error> {
+pub fn get_top_story_ids(main: &mut Main) -> Result<HnTopStories, Error> {
     let logger = &main.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
     let endpoint = &main.endpoint;
     let client = &main.client;
@@ -25,10 +26,19 @@ pub fn get_top_story_ids(main: &mut Main) -> Result<String, Error> {
                     future::ok::<_, Error>(v)
                 })
         })
-        .map(|chunks| String::from_utf8(chunks).unwrap());
+        .map(|chunks| 
+            deserialize::<HnTopStories>(chunks)
+        );
     let result = main.core.run(work);
     result
 }
+
+fn deserialize<T:Deserialize>(chunks:Vec<u8>) -> T {
+    let s = String::from_utf8(chunks).unwrap();
+    let deserialized: T = serde_json::from_str(&s).unwrap();
+    deserialized
+}
+
 ///
 /// Gets HnItem wrapped in Result 
 ///
@@ -46,9 +56,7 @@ pub fn get_item_by_id(item: &str, main: &mut Main) -> Result<HnItem, Error> {
                 })
         })
         .map(|chunks| {
-            let s = String::from_utf8(chunks).unwrap();
-            let deserialized: HnItem = serde_json::from_str(&s).unwrap();
-            deserialized
+            deserialize::<HnItem>(chunks)
         });
     let result = main.core.run(work);
     result
@@ -86,12 +94,19 @@ fn common_headers(req: &mut Request) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use app::*;
 
     #[test]
     fn request_item_test() {
         let mut main = create_main();
         let s = String::from("8000");
         let response = main.core.run(request_item(&s, &main.client, &main.endpoint)).unwrap();
+        assert_eq!(StatusCode::Ok, response.status());
+    }
+    #[test]
+    fn request_top_stories_test() {
+        let mut main = create_main();
+        let response = main.core.run(request_top_story_ids(&main.client, &main.endpoint)).unwrap();
         assert_eq!(StatusCode::Ok, response.status());
     }
 
@@ -105,6 +120,11 @@ mod tests {
         assert!(!hnitem.type_str.is_empty());
         assert!(!hnitem.title.is_empty());
         assert_eq!(126809, hnitem.id);
-
+    }
+    #[test]
+    fn get_top_stories_test() {
+        let mut main = create_main();
+        let top_stories: HnTopStories = get_top_story_ids(&mut main).unwrap();
+        assert!(top_stories.values.len() != 0);
     }
 }
