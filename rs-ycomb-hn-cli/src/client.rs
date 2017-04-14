@@ -140,10 +140,10 @@ mod tests {
         let mut main = create_main();
         let s = String::from("126809");
         let hnitem: HnItem = get_item_by_id(&s, &mut main).unwrap();
-        assert!(hnitem.score != 0);
+        assert!(hnitem.score.unwrap() != 0);
         assert!(hnitem.id != 0);
         assert!(!hnitem.type_str.is_empty());
-        assert!(!hnitem.title.is_empty());
+        assert!(!hnitem.title.unwrap().is_empty());
         assert_eq!(126809, hnitem.id);
     }
     #[test]

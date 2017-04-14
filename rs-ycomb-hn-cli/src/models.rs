@@ -14,17 +14,23 @@ impl Deserialize for HnTopStories {
         Deserialize::deserialize(deserializer).map(|arr: Vec<i32>| HnTopStories { values: arr })
     }
 }
-
+// TODO Add simple decision tree to deduct is it probably a post, comment or something different
 #[derive(Serialize, Deserialize)]
 pub struct HnItem {
     pub by: String,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub parent: Option<i32>,
     #[serde(skip_serializing_if="Option::is_none")]
     pub descendants: Option<i32>,
     pub id: i32,
     #[serde(skip_serializing_if="Option::is_none")]
     pub kids: Option<Vec<i32>>,
-    pub title: String,
-    pub score: i32,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub title: Option<String>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub score: Option<i32>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub text: Option<String>,
     pub time: f64,
     #[serde(rename(deserialize = "type"))]
     pub type_str: String,
@@ -59,10 +65,10 @@ mod tests {
         assert_eq!(71, deserialized.descendants.unwrap());
         assert_eq!("dhouston", deserialized.by);
         assert_eq!(8863, deserialized.id);
-        assert_eq!(111, deserialized.score);
+        assert_eq!(111, deserialized.score.unwrap());
         assert_eq!(1175714200.0f64, deserialized.time);
         assert_eq!("My YC app: Dropbox - Throw away your USB drive",
-                   deserialized.title);
+                   deserialized.title.unwrap());
         assert_eq!("story", deserialized.type_str);
         assert_eq!("http://www.getdropbox.com/u/2/screencast.html",
                    deserialized.url.unwrap());
