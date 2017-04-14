@@ -88,7 +88,7 @@ fn request_item(item: &str,
 }
 
 fn common_headers(req: &mut Request) {
-    req.headers_mut().set(UserAgent::new("hyper"));
+    req.headers_mut().set(UserAgent::new("rs-hackernews-cli"));
 }
 
 #[cfg(test)]
