@@ -12,6 +12,7 @@ extern crate hyper;
 extern crate tokio_core;
 extern crate hyper_tls;
 extern crate time;
+extern crate rayon;
 
 use std::env;
 use std::io::{self, Write};

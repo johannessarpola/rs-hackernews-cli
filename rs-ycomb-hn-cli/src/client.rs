@@ -7,6 +7,7 @@ use futures::future;
 use serde_json;
 use slog::*;
 use serde::Deserialize;
+use rayon::prelude::*;
 
 use models::*;
 use endpoint::HnNewsEndpoint;
@@ -26,23 +27,22 @@ pub fn get_top_story_ids(main: &mut Main) -> Result<HnTopStories, Error> {
                     future::ok::<_, Error>(v)
                 })
         })
-        .map(|chunks| 
-            deserialize::<HnTopStories>(chunks)
-        );
+        .map(|chunks| deserialize::<HnTopStories>(chunks));
     let result = main.core.run(work);
     result
 }
 
-fn deserialize<T:Deserialize>(chunks:Vec<u8>) -> T {
+fn deserialize<T: Deserialize>(chunks: Vec<u8>) -> T {
     let s = String::from_utf8(chunks).unwrap();
     let deserialized: T = serde_json::from_str(&s).unwrap();
     deserialized
 }
 
 ///
-/// Gets HnItem wrapped in Result 
+/// Gets HnItem wrapped in Result
 ///
 pub fn get_item_by_id(item: &str, main: &mut Main) -> Result<HnItem, Error> {
+    // note kids in item are comments, parts not sure what it is
     let logger = &main.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
     let endpoint = &main.endpoint;
     let client = &main.client;
@@ -55,14 +55,39 @@ pub fn get_item_by_id(item: &str, main: &mut Main) -> Result<HnItem, Error> {
                     future::ok::<_, Error>(v)
                 })
         })
-        .map(|chunks| {
-            deserialize::<HnItem>(chunks)
-        });
+        .map(|chunks| deserialize::<HnItem>(chunks));
     let result = main.core.run(work);
     result
 }
 
-fn get_comments_for_a_story(main: &mut Main, story_id: i32) {}
+fn get_comments_for_item(main: &mut Main, item: &HnItem) -> Option<Vec<HnItem>> {
+    match item.kids {
+        Some(ref kids) => {
+            let core = &mut main.core;
+            let logger = &mut main.logger; // These need to be mutable as otherwise it'll cause mutable<>immutable borrow error
+            let endpoint = &mut main.endpoint;
+            let client = &mut main.client;
+            let comments: &Vec<i32> = &kids;
+            let raw_items = comments.iter()
+                .map(|item_id| (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint)))
+                .map(|(item_id, request_work)| {
+                    let subtask = request_work
+                    .and_then(|response| {
+                        response.body()
+                            .fold(Vec::new(), |mut v, chunk| {
+                                v.extend(&chunk[..]);
+                                future::ok::<_, Error>(v)
+                            })
+                    });
+                    core.run(subtask).unwrap()
+                })
+                .collect::<Vec<Vec<_>>>();
+            let items = raw_items.into_iter().map(|chunks| deserialize::<HnItem>(chunks)).collect();
+            Some(items)
+        }
+        None => None,
+    }
+}
 
 fn log_response_status(logger: &Logger, url: &str, status: &StatusCode) {
     info!(logger,
@@ -126,5 +151,14 @@ mod tests {
         let mut main = create_main();
         let top_stories: HnTopStories = get_top_story_ids(&mut main).unwrap();
         assert!(top_stories.values.len() != 0);
+    }
+    #[test]
+    fn get_comments_test() {
+        let mut main = create_main();
+        let mut main = create_main();
+        let s = String::from("14114235");
+        let hnitem: HnItem = get_item_by_id(&s, &mut main).unwrap();
+        let comments: Vec<HnItem> = get_comments_for_item(&mut main, &hnitem).unwrap();
+        assert!(comments.len() != 0);
     }
 }
