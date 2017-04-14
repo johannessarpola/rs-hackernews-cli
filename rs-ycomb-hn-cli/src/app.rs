@@ -6,9 +6,9 @@ use slog::*;
 use slog_term::*;
 
 ///
-/// 'Main' struct which have relevant parts which are use as core elements of the application
+/// 'AppDomain' struct which have relevant parts which are use as core elements of the application
 ///
-pub struct Main {
+pub struct AppDomain {
     pub core: Core,
     pub endpoint: HnNewsEndpoint,
     pub client: Client<HttpsConnector>,
@@ -22,19 +22,19 @@ fn configure_client(handle: &Handle) -> Client<HttpsConnector> {
             .build(&handle)
 }
 
-pub fn create_main() -> Main {
+pub fn create_app_domain() -> AppDomain {
     let logger = create_loggers();
     let mut core = Core::new().unwrap();
     let handle = core.handle();
     let client = configure_client(&handle);
     let endpoint = HnNewsEndpoint::build_default();
-    let mut main = Main {
+    let mut app_domain = AppDomain {
         core: core,
         endpoint: endpoint,
         client: client,
         logger: logger,
     };
-    main
+    app_domain
 }
 fn create_loggers() -> Logger {
     let drain = streamer().build().fuse();

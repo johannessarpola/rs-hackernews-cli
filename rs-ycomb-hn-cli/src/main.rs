@@ -29,9 +29,9 @@ use client::*;
 
 
 fn main() {
-    let mut main = create_main();
-    info!(&main.logger, "Application started");
-    let top_stories: HnTopStories = get_top_story_ids(&mut main).unwrap();
+    let mut app_domain = create_app_domain();
+    info!(&app_domain.logger, "Application started");
+    let top_stories: HnTopStories = get_top_story_ids(&mut app_domain).unwrap();
     for s in &top_stories.values {
         println!("{}", s);
     }

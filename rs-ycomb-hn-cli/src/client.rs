@@ -11,13 +11,13 @@ use rayon::prelude::*;
 
 use models::*;
 use endpoint::HnNewsEndpoint;
-use app::Main;
+use app::AppDomain;
 use utils::*;
 
-pub fn get_top_story_ids(main: &mut Main) -> Result<HnTopStories, Error> {
-    let logger = &main.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
-    let endpoint = &main.endpoint;
-    let client = &main.client;
+pub fn get_top_story_ids(app_domain: &mut AppDomain) -> Result<HnTopStories, Error> {
+    let logger = &app_domain.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
+    let endpoint = &app_domain.endpoint;
+    let client = &app_domain.client;
     let work = request_top_story_ids(&client, &endpoint)
         .and_then(|res| {
             log_response_status(&logger, &endpoint.get_top_stories_path(), &res.status());
@@ -28,7 +28,7 @@ pub fn get_top_story_ids(main: &mut Main) -> Result<HnTopStories, Error> {
                 })
         })
         .map(|chunks| deserialize::<HnTopStories>(chunks));
-    let result = main.core.run(work);
+    let result = app_domain.core.run(work);
     result
 }
 
@@ -41,11 +41,11 @@ fn deserialize<T: Deserialize>(chunks: Vec<u8>) -> T {
 ///
 /// Gets HnItem wrapped in Result
 ///
-pub fn get_item_by_id(item: &str, main: &mut Main) -> Result<HnItem, Error> {
+pub fn get_item_by_id(item: &str, app_domain: &mut AppDomain) -> Result<HnItem, Error> {
     // note kids in item are comments, parts not sure what it is
-    let logger = &main.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
-    let endpoint = &main.endpoint;
-    let client = &main.client;
+    let logger = &app_domain.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
+    let endpoint = &app_domain.endpoint;
+    let client = &app_domain.client;
     let work = request_item(&item, &client, &endpoint)
         .and_then(|res| {
             log_response_status(&logger, &endpoint.get_item_path(&item), &res.status());
@@ -56,17 +56,17 @@ pub fn get_item_by_id(item: &str, main: &mut Main) -> Result<HnItem, Error> {
                 })
         })
         .map(|chunks| deserialize::<HnItem>(chunks));
-    let result = main.core.run(work);
+    let result = app_domain.core.run(work);
     result
 }
 
-fn get_comments_for_item(main: &mut Main, item: &HnItem) -> Option<Vec<HnItem>> {
+fn get_comments_for_item(app_domain: &mut AppDomain, item: &HnItem) -> Option<Vec<HnItem>> {
     match item.kids {
         Some(ref kids) => {
-            let core = &mut main.core;
-            let logger = &mut main.logger; // These need to be mutable as otherwise it'll cause mutable<>immutable borrow error
-            let endpoint = &mut main.endpoint;
-            let client = &mut main.client;
+            let core = &mut app_domain.core;
+            let logger = &mut app_domain.logger; // These need to be mutable as otherwise it'll cause mutable<>immutable borrow error
+            let endpoint = &mut app_domain.endpoint;
+            let client = &mut app_domain.client;
             let comments: &Vec<i32> = &kids;
             let raw_items = comments.iter()
                 .map(|item_id| (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint)))
@@ -123,23 +123,23 @@ mod tests {
 
     #[test]
     fn request_item_test() {
-        let mut main = create_main();
+        let mut app_domain = create_app_domain();
         let s = String::from("8000");
-        let response = main.core.run(request_item(&s, &main.client, &main.endpoint)).unwrap();
+        let response = app_domain.core.run(request_item(&s, &app_domain.client, &app_domain.endpoint)).unwrap();
         assert_eq!(StatusCode::Ok, response.status());
     }
     #[test]
     fn request_top_stories_test() {
-        let mut main = create_main();
-        let response = main.core.run(request_top_story_ids(&main.client, &main.endpoint)).unwrap();
+        let mut app_domain = create_app_domain();
+        let response = app_domain.core.run(request_top_story_ids(&app_domain.client, &app_domain.endpoint)).unwrap();
         assert_eq!(StatusCode::Ok, response.status());
     }
 
     #[test]
     fn get_item_by_id_test() {
-        let mut main = create_main();
+        let mut app_domain = create_app_domain();
         let s = String::from("126809");
-        let hnitem: HnItem = get_item_by_id(&s, &mut main).unwrap();
+        let hnitem: HnItem = get_item_by_id(&s, &mut app_domain).unwrap();
         assert!(hnitem.score.unwrap() != 0);
         assert!(hnitem.id != 0);
         assert!(!hnitem.type_str.is_empty());
@@ -148,17 +148,16 @@ mod tests {
     }
     #[test]
     fn get_top_stories_test() {
-        let mut main = create_main();
-        let top_stories: HnTopStories = get_top_story_ids(&mut main).unwrap();
+        let mut app_domain = create_app_domain();
+        let top_stories: HnTopStories = get_top_story_ids(&mut app_domain).unwrap();
         assert!(top_stories.values.len() != 0);
     }
     #[test]
     fn get_comments_test() {
-        let mut main = create_main();
-        let mut main = create_main();
+        let mut app_domain = create_app_domain();
         let s = String::from("14114235");
-        let hnitem: HnItem = get_item_by_id(&s, &mut main).unwrap();
-        let comments: Vec<HnItem> = get_comments_for_item(&mut main, &hnitem).unwrap();
+        let hnitem: HnItem = get_item_by_id(&s, &mut app_domain).unwrap();
+        let comments: Vec<HnItem> = get_comments_for_item(&mut app_domain, &hnitem).unwrap();
         assert!(comments.len() != 0);
     }
 }
