@@ -37,6 +37,15 @@ pub struct HnItem {
     pub url: Option<String>,
 }
 
+impl HnItem {
+    pub fn to_json(&self) -> String{
+        serde_json::to_string(&self).unwrap()
+    }
+    pub fn to_json_pretty(&self) -> String{
+        serde_json::to_string_pretty(&self).unwrap()
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct HnUser {
     pub about: String,

@@ -30,7 +30,10 @@ fn main() {
     info!(&app_domain.logger, "Application started");
     let top_stories: HnListOfItems = get_top_story_ids(&mut app_domain).unwrap();
     info!(&app_domain.logger, format!("Received {} top stories", top_stories.values.len() ));
-    for s in &top_stories.values {
-        println!("{}", s);
+    for item_id in top_stories.values.iter().take(10)
+    {
+        let s = format!("{}", item_id);
+        let item:HnItem = client::get_item_by_id(&s, &mut app_domain).unwrap();
+        println!("{}", item.to_json());
     }
 }
