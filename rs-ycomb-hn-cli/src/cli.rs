@@ -19,6 +19,7 @@ fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, Str
     }
 }
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -39,5 +40,7 @@ mod tests {
         assert!(s.contains("1"));
         assert!(s.contains("dhouston"));
         assert!(s.contains("My YC app: Dropbox - Throw away your USB drive"));
+        assert!(deserialized.by.len() != 0);
+        assert!(deserialized.title.unwrap().len() != 0);
     }
 }

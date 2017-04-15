@@ -5,7 +5,6 @@ use hyper_tls::HttpsConnector;
 use futures::{Future, Stream};
 use futures::future;
 use serde_json;
-use slog::*;
 use serde::Deserialize;
 
 use utils::{parse_url_from_str, log_response_status};

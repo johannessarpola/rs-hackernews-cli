@@ -13,6 +13,7 @@ extern crate hyper;
 extern crate tokio_core;
 extern crate hyper_tls;
 extern crate time;
+extern crate clap;
 
 mod utils;
 mod models;
