@@ -67,10 +67,10 @@ fn get_comments_for_item(app_domain: &mut AppDomain, item: &HnItem) -> Option<Ve
             let endpoint = &mut app_domain.endpoint;
             let client = &mut app_domain.client;
             let comments: &Vec<i32> = &kids;
+            info!(&logger, format!("Retrieving comments for {} with {} comments", &item.id, kids.len()));
             let raw_items = comments.iter()
                 .map(|item_id| (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint)))
                 .map(|(item_id, request_work)| {
-                    // Todo: add some logging for item_id
                     let subtask = request_work
                     .and_then(|response| {
                         response.body()
