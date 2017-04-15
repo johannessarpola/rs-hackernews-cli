@@ -1,5 +1,5 @@
 use hyper::{Client, Method, Error, StatusCode};
-use hyper::header::{UserAgent};
+use hyper::header::UserAgent;
 use hyper::client::{Request, FutureResponse};
 use hyper_tls::HttpsConnector;
 use futures::{Future, Stream};
@@ -67,12 +67,16 @@ fn get_comments_for_item(app_domain: &mut AppDomain, item: &HnItem) -> Option<Ve
             let endpoint = &mut app_domain.endpoint;
             let client = &mut app_domain.client;
             let comments: &Vec<i32> = &kids;
-            info!(&logger, format!("Retrieving comments for {} with {} comments", &item.id, kids.len()));
+            info!(&logger,
+                  format!("Retrieving comments for {} with {} comments",
+                          &item.id,
+                          kids.len()));
             let raw_items = comments.iter()
-                .map(|item_id| (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint)))
+                .map(|item_id| {
+                    (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint))
+                })
                 .map(|(item_id, request_work)| {
-                    let subtask = request_work
-                    .and_then(|response| {
+                    let subtask = request_work.and_then(|response| {
                         response.body()
                             .fold(Vec::new(), |mut v, chunk| {
                                 v.extend(&chunk[..]);
@@ -125,13 +129,17 @@ mod tests {
     fn request_item_test() {
         let mut app_domain = create_app_domain();
         let s = String::from("8000");
-        let response = app_domain.core.run(request_item(&s, &app_domain.client, &app_domain.endpoint)).unwrap();
+        let response = app_domain.core
+            .run(request_item(&s, &app_domain.client, &app_domain.endpoint))
+            .unwrap();
         assert_eq!(StatusCode::Ok, response.status());
     }
     #[test]
     fn request_top_stories_test() {
         let mut app_domain = create_app_domain();
-        let response = app_domain.core.run(request_top_story_ids(&app_domain.client, &app_domain.endpoint)).unwrap();
+        let response = app_domain.core
+            .run(request_top_story_ids(&app_domain.client, &app_domain.endpoint))
+            .unwrap();
         assert_eq!(StatusCode::Ok, response.status());
     }
 
