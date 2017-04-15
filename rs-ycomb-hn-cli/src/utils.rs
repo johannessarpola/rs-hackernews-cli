@@ -1,4 +1,10 @@
-use hyper::{Uri};
+use hyper::{Uri, StatusCode};
+use slog::*;
+
+pub fn log_response_status(logger: &Logger, url: &str, status: &StatusCode) {
+    info!(logger,
+          format!("Request to {} finished with status {}", url, status));
+}
 
 pub fn combine_strings(strings: Vec<&str>) -> String {
     let combine = strings.join("");

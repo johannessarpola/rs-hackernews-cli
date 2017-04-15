@@ -1,4 +1,4 @@
-use hyper::{Client, Method, Error, StatusCode};
+use hyper::{Uri, Client, Method, Error, StatusCode};
 use hyper::header::UserAgent;
 use hyper::client::{Request, FutureResponse};
 use hyper_tls::HttpsConnector;
@@ -8,12 +8,12 @@ use serde_json;
 use slog::*;
 use serde::Deserialize;
 
-use utils::parse_url_from_str;
+use utils::{parse_url_from_str, log_response_status};
 use models::*;
 use endpoint::HnNewsEndpoint;
 use app::AppDomain;
 
-pub fn get_top_story_ids(app_domain: &mut AppDomain) -> Result<HnTopStories, Error> {
+pub fn get_top_story_ids(app_domain: &mut AppDomain) -> Result<HnListOfItems, Error> {
     let logger = &app_domain.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
     let endpoint = &app_domain.endpoint;
     let client = &app_domain.client;
@@ -26,7 +26,7 @@ pub fn get_top_story_ids(app_domain: &mut AppDomain) -> Result<HnTopStories, Err
                     future::ok::<_, Error>(v)
                 })
         })
-        .map(|chunks| deserialize::<HnTopStories>(chunks));
+        .map(|chunks| deserialize::<HnListOfItems>(chunks));
     let result = app_domain.core.run(work);
     result
 }
@@ -93,24 +93,31 @@ fn get_comments_for_item(app_domain: &mut AppDomain, item: &HnItem) -> Option<Ve
     }
 }
 
-fn log_response_status(logger: &Logger, url: &str, status: &StatusCode) {
-    info!(logger,
-          format!("Request to {} finished with status {}", url, status));
-}
+
 
 fn request_top_story_ids(client: &Client<HttpsConnector>,
                          endpoints: &HnNewsEndpoint)
                          -> FutureResponse {
     let url = parse_url_from_str(&endpoints.get_top_stories_path());
-    let mut request = Request::new(Method::Get, url);
-    common_headers(&mut request);
-    client.request(request)
+    create_get_request(url, &client)
 }
+
+fn request_best_stories_ids(client: &Client<HttpsConnector>,
+                         endpoints: &HnNewsEndpoint)
+                         -> FutureResponse {
+    let url = parse_url_from_str(&endpoints.get_best_stories_path());
+    create_get_request(url, &client)
+}
+
 fn request_item(item: &str,
                 client: &Client<HttpsConnector>,
                 endpoints: &HnNewsEndpoint)
                 -> FutureResponse {
     let url = parse_url_from_str(&endpoints.get_item_path(item));
+    create_get_request(url, &client)
+}
+
+fn create_get_request(url:Uri, client: &Client<HttpsConnector>) -> FutureResponse {
     let mut request = Request::new(Method::Get, url);
     common_headers(&mut request);
     client.request(request)
@@ -119,6 +126,7 @@ fn request_item(item: &str,
 fn common_headers(req: &mut Request) {
     req.headers_mut().set(UserAgent::new("rs-hackernews-cli"));
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -142,6 +150,14 @@ mod tests {
             .unwrap();
         assert_eq!(StatusCode::Ok, response.status());
     }
+    #[test]
+    fn request_best_stories_test() {
+        let mut app_domain = create_app_domain();
+        let response = app_domain.core
+            .run(request_best_stories_ids(&app_domain.client, &app_domain.endpoint))
+            .unwrap();
+        assert_eq!(StatusCode::Ok, response.status());
+    }
 
     #[test]
     fn get_item_by_id_test() {
@@ -157,9 +173,10 @@ mod tests {
     #[test]
     fn get_top_stories_test() {
         let mut app_domain = create_app_domain();
-        let top_stories: HnTopStories = get_top_story_ids(&mut app_domain).unwrap();
+        let top_stories: HnListOfItems = get_top_story_ids(&mut app_domain).unwrap();
         assert!(top_stories.values.len() != 0);
     }
+
     #[test]
     fn get_comments_test() {
         let mut app_domain = create_app_domain();

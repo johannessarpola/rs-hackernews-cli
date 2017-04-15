@@ -1,17 +1,16 @@
 use serde::{Deserialize, Deserializer};
 use serde_json;
-use utils::*;
 
 #[derive(Serialize)]
-pub struct HnTopStories {
+pub struct HnListOfItems {
     pub values: Vec<i32>,
 }
 
-impl Deserialize for HnTopStories {
+impl Deserialize for HnListOfItems {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
         where D: Deserializer
     {
-        Deserialize::deserialize(deserializer).map(|arr: Vec<i32>| HnTopStories { values: arr })
+        Deserialize::deserialize(deserializer).map(|arr: Vec<i32>| HnListOfItems { values: arr })
     }
 }
 // TODO Add simple decision tree to deduct is it probably a post, comment or something different
@@ -81,7 +80,7 @@ mod tests {
         File::open("res/test/top-stories.json")
             .and_then(|mut file| file.read_to_string(&mut contents))
             .unwrap();
-        let deserialized: HnTopStories = serde_json::from_str(&contents).unwrap();
+        let deserialized: HnListOfItems = serde_json::from_str(&contents).unwrap();
         assert!(deserialized.values.len() > 3);
     }
     #[test]
