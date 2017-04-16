@@ -45,23 +45,24 @@ fn main() {
     app_cache.retrieved_top_stories = get_top_story_ids(&mut app_domain, &mut app_state_machine)
         .ok();
     front_page(&mut app_domain, &mut app_cache, &mut app_state_machine);
-    let (mut tx, rx) = mpsc::channel(1);
+    let (mut sender, receiver) = mpsc::channel(1);
 
-    let listener = rx.for_each(|res| stdin_listener_sink(res));
     spawn(move || {
         let stdin = io::stdin();
         for line in stdin.lock().lines() {
-            tx = tx.send(line).wait().unwrap();
+            let sender = sender.clone();
+            sender.send(line).wait().unwrap();
         }
     });
 
+    let listener = receiver.for_each(|msg| stdin_listener_sink(msg));
     app_domain.core.run(listener);
-
-    // run_gui_client(&mut app_domain, &mut app_cache, &mut app_state_machine);
 }
-fn stdin_listener_sink(res:Result<String, io::Error>) -> Result<(),()> {
-        match res {
-            Ok(_res) => println!("{}", _res),
+
+fn stdin_listener_sink(msg:Result<String, io::Error>) -> Result<(),()> {
+        // TODO Handle different commands and arguments related to state
+        match msg {
+            Ok(_msg) => println!("{}", _msg),
             Err(_) => println!("{}", "Error"),
         }
         Ok(())
