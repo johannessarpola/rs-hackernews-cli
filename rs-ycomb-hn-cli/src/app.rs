@@ -19,6 +19,22 @@ pub struct AppDomain {
     pub logger: slog::Logger,
 }
 
+enum AppStates {
+    WaitingUserInput,
+    RetrievingResults,
+    DoingLocalWork,
+    Idle,
+}
+
+struct AppStateMachine {
+    pub viewing_top_stories:bool, 
+    pub viewing_comments_for_a_story:bool,
+    pub connection_working:bool,
+    pub top_story_page_index:i32,
+    pub comments_page_index:i32,
+    pub current_state: AppStates,
+}
+
 struct AppLogFormat;
 
 impl slog_stream::Format for AppLogFormat {
@@ -27,7 +43,7 @@ impl slog_stream::Format for AppLogFormat {
               rinfo: &slog::Record,
               _logger_values: &slog::OwnedKeyValueList)
               -> io::Result<()> {
-        let msg = format!("{} - {}\n", rinfo.level(), rinfo.msg());
+        let msg = format!("{} {} from line {} in {}\n", rinfo.level(), rinfo.msg(), rinfo.line(), rinfo.file());
         let _ = try!(io.write_all(msg.as_bytes()));
         Ok(())
     }
