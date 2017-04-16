@@ -53,6 +53,7 @@ pub struct AppStateMachine {
     pub connection_working: bool,
     pub listing_page_index: i32,
     pub comments_page_index: i32,
+    pub last_opened_item_id: String,
     pub current_state: AppStates,
 }
 
@@ -64,6 +65,7 @@ impl AppStateMachine {
             connection_working: false,
             listing_page_index: -1,
             comments_page_index: -1,
+            last_opened_item_id: String::from(""),
             current_state: AppStates::Starting,
         }
     }
@@ -96,7 +98,7 @@ fn configure_client(handle: &Handle) -> Client<HttpsConnector> {
 impl AppDomain {
     pub fn new() -> AppDomain {
         let logger = create_loggers();
-        let mut core = Core::new().unwrap();
+        let mut core = Core::new().expect("Failed to create core");
         let handle = core.handle();
         let client = configure_client(&handle);
         let endpoint = HnNewsEndpoint::build_default();
