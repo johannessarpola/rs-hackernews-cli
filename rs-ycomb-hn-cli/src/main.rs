@@ -31,6 +31,7 @@ use tokio_core::reactor::{Core, Handle};
 use std::io::{self, BufRead};
 use std::thread::spawn;
 use std::thread;
+use std::process;
 use futures::{Stream, Sink, Future};
 use futures::sync::mpsc;
 use futures::sync::mpsc::{Receiver, Sender};
@@ -55,36 +56,60 @@ fn main() {
             sender.send(line).wait().unwrap();
         }
     });
-    let listener = receiver.for_each(|msg| gui_listener(msg, &mut app_domain, &mut app_cache, &mut app_state_machine));
+    let listener =
+        receiver.for_each(|msg| {
+            gui_listener(msg, &mut app_domain, &mut app_cache, &mut app_state_machine)
+        });
     main_core.run(listener);
 }
 
-fn gui_listener(msg:Result<String, io::Error>, app_domain:&mut AppDomain, app_cache:&mut AppCache, app_state_machine: &mut AppStateMachine) -> Result<(),()> {
-        // TODO Handle different commands and arguments related to state
-        match msg {
-            Ok(_msg) => {
-                println!("{}", _msg);
+fn gui_listener(msg_result: Result<String, io::Error>,
+                app_domain: &mut AppDomain,
+                app_cache: &mut AppCache,
+                app_state_machine: &mut AppStateMachine)
+                -> Result<(), ()> {
+    // TODO Handle different commands and arguments related to state
+    // TODO Logging
+    match msg_result {
+        Ok(msg) => {
+            if msg.len() >= 4 && &msg[0..4] == "next" {
                 app_state_machine.listing_page_index += 1;
                 print_ten_stories(app_domain, app_cache, app_state_machine);
-
-            },
-            Err(_) => {
-                println!("{}", "Error")
-            },
+            } else if msg.parse::<i32>().is_ok() {
+                let numb = msg.parse::<i32>().unwrap();
+                println!("{}", numb);
+                // TODO open story by index
+            } else if (msg.len() >= 4 && &msg[0..4] == "exit") {
+                process::exit(0);
+            
+            } else if msg.len() >= 8 && &msg[0..8] == "comments" {
+                // TODO get comments for story
+            }
+            else if msg.len() >= 4 && &msg[0..4] == "load" {
+                // TODO load page linked in the url to a folder
+            } 
+            else if msg.len() >= 4 && &msg[0..4] == "back"  {
+                if app_state_machine.listing_page_index >= 0  {
+                    app_state_machine.listing_page_index -= 1;
+                }
+                print_ten_stories(app_domain, app_cache, app_state_machine);
+            } 
         }
-        Ok(())
+        Err(_) => println!("{}", "Error"),
+    }
+    Ok(())
 }
 
 fn print_ten_stories(app_domain: &mut AppDomain,
-              app_cache: &mut AppCache,
-              app_state_machine: &mut AppStateMachine) {
-    
+                     app_cache: &mut AppCache,
+                     app_state_machine: &mut AppStateMachine) {
+
     // This probably should not need all the parameters
     let top_stories = app_cache.retrieved_top_stories.as_ref().unwrap();
     info!(&app_domain.logger,
           format!("Received {} top stories", top_stories.values.len()));
-    let mut index = 0;
     let skipped: usize = (app_state_machine.listing_page_index * 10) as usize;
+    let mut index = 0 + skipped as i32;
 
     for item_id in top_stories.values.iter().skip(skipped).take(10) {
         index += 1;
@@ -93,4 +118,3 @@ fn print_ten_stories(app_domain: &mut AppDomain,
         print_headline_with_author(&item, &index);
     }
 }
-
