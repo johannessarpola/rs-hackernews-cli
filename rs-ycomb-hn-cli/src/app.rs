@@ -63,8 +63,8 @@ impl AppStateMachine {
             viewing_top_stories: false,
             viewing_comments_for_a_story: false,
             connection_working: false,
-            listing_page_index: -1,
-            comments_page_index: -1,
+            listing_page_index: 0,
+            comments_page_index: 0,
             last_opened_item_id: String::from(""),
             current_state: AppStates::Starting,
         }
