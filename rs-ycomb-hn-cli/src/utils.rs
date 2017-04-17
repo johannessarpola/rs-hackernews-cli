@@ -10,7 +10,9 @@ pub fn combine_strings(strings: Vec<&str>) -> String {
     let combine = strings.join("");
     combine
 }
-
+pub fn rand_string(length: i32) -> String {
+    String::from("abc") // TODO Implement
+}
 pub fn parse_url_from_str(url_str: &str) -> Uri {
     let url_str = String::from(url_str);
     let url = url_str.parse::<Uri>().unwrap();

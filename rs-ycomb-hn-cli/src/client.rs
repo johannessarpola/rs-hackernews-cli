@@ -7,12 +7,15 @@ use futures::future;
 use serde_json;
 use serde::Deserialize;
 
-use std::fs::File; // TODO file writing to utils.rs
+use std::fs::{File, OpenOptions}; // TODO file writing to utils.rs
 use std::io::prelude::*;
-use std::io::{stdout, Write};
+use std::io::Write;
+use std::path::Path;
 
 use curl::easy::Easy;
+use curl::easy;
 use utils::{parse_url_from_str, log_response_status};
+use utils;
 use models::*;
 use endpoint::HnNewsEndpoint;
 use app::{AppDomain, AppStates, AppStateMachine};
@@ -143,15 +146,35 @@ pub fn download_page_from_item(item: &HnItem,
         Some(ref url) => {
             let core = &mut app_domain.core;
             let logger = &mut app_domain.logger;
-            let mut easy = Easy::new();
-            easy.url(&url);
-            easy.write_function(|data| Ok(stdout().write(data).unwrap()))
-                .unwrap();
+            let uri = utils::parse_url_from_str(url);
+            let mut filename: String = utils::combine_strings(vec!(&uri.path().replace("/", "_"), ".html")); // TODO Improve naming at some point
+            let path = Path::new(&filename);
+            let mut file: File =
+                OpenOptions::new().write(true).create(true).open(path.as_os_str()).unwrap();
 
-           easy.perform().unwrap(); // TODO fix to use async
+            let v = curl_req(url);
+            let s = String::from_utf8(v).unwrap(); // TODO Handle errs
+            file.write_all(s.as_bytes());
         }
         None => (),
     }
+}
+
+fn curl_req(url: &String) -> Vec<u8> {
+    let mut vecced: Vec<u8> = Vec::new();
+    let mut easy = Easy::new();
+    easy.get(true).unwrap();
+    easy.url(url).unwrap();
+    {
+        let mut transfer = easy.transfer();
+        transfer.write_function(|data| {
+                vecced.extend_from_slice(data);
+                Ok(data.len())
+            })
+            .unwrap();
+        transfer.perform().unwrap();
+    }
+    vecced
 }
 
 fn create_get_request(url: Uri, client: &Client<HttpsConnector>) -> FutureResponse {

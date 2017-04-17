@@ -62,6 +62,7 @@ fn main() {
         receiver.for_each(|msg| {
             gui_listener(msg, &mut app_domain, &mut app_cache, &mut app_state_machine)
         });
+
     main_core.run(listener);
 }
 
@@ -70,7 +71,6 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 app_cache: &mut AppCache,
                 app_state_machine: &mut AppStateMachine)
                 -> Result<(), ()> {
-    // TODO Handle different commands and arguments related to state
     // TODO Logging
     match msg_result {
         Ok(msg) => {
@@ -78,7 +78,7 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 app_state_machine.listing_page_index += 1;
                 print_ten_stories(app_domain, app_cache, app_state_machine);
             } else if msg.parse::<i32>().is_ok() {
-                let numb = msg.parse::<i32>().unwrap();
+                let numb = msg.parse::<i32>().unwrap(); // FIXME not handling errors either
                 println!("{}", numb);
                 // TODO open story by index
             } else if msg.len() >= 4 && &msg[0..4] == "exit" {
@@ -88,11 +88,11 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 // TODO get comments for story
             }
             else if msg.len() >= 4 && &msg[0..4] == "load" {
-                let numb = msg[5..].parse::<i32>().unwrap() as usize;
-                let s = format!("{}", app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]);
+                let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                let s = format!("{}", app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
                 let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
                 // TODO load page linked in the url to a folder
-                download_page_from_item(&item, app_domain, app_state_machine);
+                client::download_page_from_item(&item, app_domain, app_state_machine);
             } 
             else if msg.len() >= 4 && &msg[0..4] == "back"  {
                 if app_state_machine.listing_page_index >= 0  {
@@ -100,6 +100,11 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 }
                 print_ten_stories(app_domain, app_cache, app_state_machine);
             } 
+            else if msg.len() >= 4 && &msg[0..4] == "open" {
+                // https://github.com/overdrivenpotato/url_open/blob/master/src/lib.rs
+                // TODO Open url in default browser
+
+            }
         }
         Err(_) => println!("{}", "Error"),
     }
@@ -121,6 +126,6 @@ fn print_ten_stories(app_domain: &mut AppDomain,
         index += 1;
         let s = format!("{}", item_id);
         let item: HnItem = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
-        print_headline_with_author(&item, &index);
+        cli::print_headline_with_author(&item, &index);
     }
 }
