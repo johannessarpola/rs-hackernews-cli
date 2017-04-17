@@ -7,12 +7,19 @@ use futures::future;
 use serde_json;
 use serde::Deserialize;
 
+use std::fs::File; // TODO file writing to utils.rs
+use std::io::prelude::*;
+use std::io::{stdout, Write};
+
+use curl::easy::Easy;
 use utils::{parse_url_from_str, log_response_status};
 use models::*;
 use endpoint::HnNewsEndpoint;
 use app::{AppDomain, AppStates, AppStateMachine};
 
-pub fn get_top_story_ids(app_domain: &mut AppDomain, state: &mut AppStateMachine) -> Result<HnListOfItems, Error> {
+pub fn get_top_story_ids(app_domain: &mut AppDomain,
+                         state: &mut AppStateMachine)
+                         -> Result<HnListOfItems, Error> {
     let logger = &app_domain.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
     let endpoint = &app_domain.endpoint;
     let client = &app_domain.client;
@@ -41,7 +48,10 @@ fn deserialize<T: Deserialize>(chunks: Vec<u8>) -> T {
 ///
 /// Gets HnItem wrapped in Result
 ///
-pub fn get_item_by_id(item: &str, app_domain: &mut AppDomain, state: &mut AppStateMachine) -> Result<HnItem, Error> {
+pub fn get_item_by_id(item: &str,
+                      app_domain: &mut AppDomain,
+                      state: &mut AppStateMachine)
+                      -> Result<HnItem, Error> {
     // note kids in item are comments, parts not sure what it is
     let logger = &app_domain.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
     let endpoint = &app_domain.endpoint;
@@ -62,7 +72,10 @@ pub fn get_item_by_id(item: &str, app_domain: &mut AppDomain, state: &mut AppSta
     result
 }
 
-fn get_comments_for_item(item: &HnItem, app_domain: &mut AppDomain, state: &mut AppStateMachine) -> Option<Vec<HnItem>> {
+fn get_comments_for_item(item: &HnItem,
+                         app_domain: &mut AppDomain,
+                         state: &mut AppStateMachine)
+                         -> Option<Vec<HnItem>> {
     match item.kids {
         Some(ref kids) => {
             let core = &mut app_domain.core;
@@ -109,8 +122,8 @@ fn request_top_story_ids(client: &Client<HttpsConnector>,
 }
 
 fn request_best_stories_ids(client: &Client<HttpsConnector>,
-                         endpoints: &HnNewsEndpoint)
-                         -> FutureResponse {
+                            endpoints: &HnNewsEndpoint)
+                            -> FutureResponse {
     let url = parse_url_from_str(&endpoints.get_best_stories_path());
     create_get_request(url, &client)
 }
@@ -123,7 +136,25 @@ fn request_item(item: &str,
     create_get_request(url, &client)
 }
 
-fn create_get_request(url:Uri, client: &Client<HttpsConnector>) -> FutureResponse {
+pub fn download_page_from_item(item: &HnItem,
+                               app_domain: &mut AppDomain,
+                               state: &mut AppStateMachine) {
+    match item.url {
+        Some(ref url) => {
+            let core = &mut app_domain.core;
+            let logger = &mut app_domain.logger;
+            let mut easy = Easy::new();
+            easy.url(&url);
+            easy.write_function(|data| Ok(stdout().write(data).unwrap()))
+                .unwrap();
+
+           easy.perform().unwrap(); // TODO fix to use async
+        }
+        None => (),
+    }
+}
+
+fn create_get_request(url: Uri, client: &Client<HttpsConnector>) -> FutureResponse {
     let mut request = Request::new(Method::Get, url);
     common_headers(&mut request);
     client.request(request)
@@ -187,11 +218,12 @@ mod tests {
 
     #[test]
     fn get_comments_test() {
-        let mut app_domain =  AppDomain::new();
+        let mut app_domain = AppDomain::new();
         let mut app_sm = AppStateMachine::new();
         let s = String::from("14114235");
         let hnitem: HnItem = get_item_by_id(&s, &mut app_domain, &mut app_sm).unwrap();
-        let comments: Vec<HnItem> = get_comments_for_item(&hnitem, &mut app_domain, &mut app_sm).unwrap();
+        let comments: Vec<HnItem> = get_comments_for_item(&hnitem, &mut app_domain, &mut app_sm)
+            .unwrap();
         assert!(comments.len() != 0);
     }
 }

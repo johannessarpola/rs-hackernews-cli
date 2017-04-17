@@ -20,7 +20,7 @@ slog = "1.5.2"
 slog-term = "1.5.0"
 slog-stream = "*"
 time = "*"
-
+curl = "0.4.6"
 
 [dev-dependencies]
 num_cpus = "1.0"

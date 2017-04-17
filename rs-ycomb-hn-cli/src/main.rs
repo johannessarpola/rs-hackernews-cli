@@ -13,7 +13,8 @@ extern crate hyper;
 extern crate tokio_core;
 extern crate hyper_tls;
 extern crate time;
-extern crate clap;
+extern crate clap; // TODO Add application help
+extern crate curl;
 
 mod utils;
 mod models;
@@ -36,6 +37,7 @@ use futures::{Stream, Sink, Future};
 use futures::sync::mpsc;
 use futures::sync::mpsc::{Receiver, Sender};
 use futures::stream::BoxStream;
+use curl::easy::Easy;
 
 fn main() {
 
@@ -79,14 +81,18 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 let numb = msg.parse::<i32>().unwrap();
                 println!("{}", numb);
                 // TODO open story by index
-            } else if (msg.len() >= 4 && &msg[0..4] == "exit") {
+            } else if msg.len() >= 4 && &msg[0..4] == "exit" {
                 process::exit(0);
             
             } else if msg.len() >= 8 && &msg[0..8] == "comments" {
                 // TODO get comments for story
             }
             else if msg.len() >= 4 && &msg[0..4] == "load" {
+                let numb = msg[5..].parse::<i32>().unwrap() as usize;
+                let s = format!("{}", app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]);
+                let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
                 // TODO load page linked in the url to a folder
+                download_page_from_item(&item, app_domain, app_state_machine);
             } 
             else if msg.len() >= 4 && &msg[0..4] == "back"  {
                 if app_state_machine.listing_page_index >= 0  {
