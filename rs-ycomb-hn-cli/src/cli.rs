@@ -19,6 +19,12 @@ fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, Str
     }
 }
 
+pub fn print_filename_of_loaded_page(filen:&str, title:&str){
+    println!("{} {} {} {}", "Downloaded page", title, "into file", filen);
+}
+pub fn could_not_load_page(title:&str){
+    println!("Could not download to file with title {}", title);
+}
 
 #[cfg(test)]
 mod tests {

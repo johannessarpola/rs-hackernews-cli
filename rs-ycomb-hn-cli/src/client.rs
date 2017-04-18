@@ -141,7 +141,7 @@ fn request_item(item: &str,
 
 pub fn download_page_from_item(item: &HnItem,
                                app_domain: &mut AppDomain,
-                               state: &mut AppStateMachine) {
+                               state: &mut AppStateMachine) -> Result<String, String> {
     match item.url {
         Some(ref url) => {
             let core = &mut app_domain.core;
@@ -155,9 +155,11 @@ pub fn download_page_from_item(item: &HnItem,
             let v = curl_req(url);
             let s = String::from_utf8(v).unwrap(); // TODO Handle errs
             file.write_all(s.as_bytes());
+            Ok(String::from(path.as_os_str().to_str().unwrap())) // should probably be path to string
         }
-        None => (),
+        None => Err(String::from("No url")),
     }
+
 }
 
 fn curl_req(url: &String) -> Vec<u8> {
