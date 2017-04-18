@@ -15,6 +15,7 @@ extern crate hyper_tls;
 extern crate time;
 extern crate clap; // TODO Add application help
 extern crate curl;
+extern crate webbrowser;
 
 mod utils;
 mod models;
@@ -38,6 +39,7 @@ use futures::sync::mpsc;
 use futures::sync::mpsc::{Receiver, Sender};
 use futures::stream::BoxStream;
 use curl::easy::Easy;
+
 
 fn main() {
 
@@ -83,27 +85,31 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 // TODO open story by index
             } else if msg.len() >= 4 && &msg[0..4] == "exit" {
                 process::exit(0);
-            
+
             } else if msg.len() >= 8 && &msg[0..8] == "comments" {
                 // TODO get comments for story
-            }
-            else if msg.len() >= 4 && &msg[0..4] == "load" {
+            } else if msg.len() >= 4 && &msg[0..4] == "load" {
                 let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
-                let s = format!("{}", app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
+                let s = format!("{}",
+                                app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
                 let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
                 // TODO load page linked in the url to a folder
                 client::download_page_from_item(&item, app_domain, app_state_machine);
-            } 
-            else if msg.len() >= 4 && &msg[0..4] == "back"  {
-                if app_state_machine.listing_page_index >= 0  {
+                // TODO print the name of file
+            } else if msg.len() >= 4 && &msg[0..4] == "back" {
+                if app_state_machine.listing_page_index >= 0 {
                     app_state_machine.listing_page_index -= 1;
                 }
                 print_ten_stories(app_domain, app_cache, app_state_machine);
-            } 
-            else if msg.len() >= 4 && &msg[0..4] == "open" {
+            } else if msg.len() >= 4 && &msg[0..4] == "open" {
                 // https://github.com/overdrivenpotato/url_open/blob/master/src/lib.rs
-                // TODO Open url in default browser
-
+                let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                let s = format!("{}",
+                                app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
+                let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
+                if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok()  {
+                    println!("{} {}", "Opened browser to url ", item.url.as_ref().unwrap());
+                }
             }
         }
         Err(_) => println!("{}", "Error"),
