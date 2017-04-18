@@ -75,10 +75,11 @@ pub fn get_item_by_id(item: &str,
     result
 }
 
-fn get_comments_for_item(item: &HnItem,
-                         app_domain: &mut AppDomain,
-                         state: &mut AppStateMachine)
-                         -> Option<Vec<HnItem>> {
+pub fn get_comments_for_item(item: &HnItem,
+                             app_domain: &mut AppDomain,
+                             state: &mut AppStateMachine)
+                             -> Option<Vec<HnItem>> {
+    // This does not take in account comments to comments
     match item.kids {
         Some(ref kids) => {
             let core = &mut app_domain.core;
@@ -141,13 +142,15 @@ fn request_item(item: &str,
 
 pub fn download_page_from_item(item: &HnItem,
                                app_domain: &mut AppDomain,
-                               state: &mut AppStateMachine) -> Result<String, String> {
+                               state: &mut AppStateMachine)
+                               -> Result<String, String> {
     match item.url {
         Some(ref url) => {
             let core = &mut app_domain.core;
             let logger = &mut app_domain.logger;
             let uri = utils::parse_url_from_str(url);
-            let mut filename: String = utils::combine_strings(vec!(&uri.path().replace("/", "_"), ".html")); // TODO Improve naming at some point
+            let mut filename: String = utils::combine_strings(vec![&uri.path().replace("/", "_"),
+                                                                   ".html"]); // TODO Improve naming at some point
             let path = Path::new(&filename);
             let mut file: File =
                 OpenOptions::new().write(true).create(true).open(path.as_os_str()).unwrap();

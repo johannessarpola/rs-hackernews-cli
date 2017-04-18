@@ -87,7 +87,8 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 info!(&app_domain.logger, "Exited application normally");
                 process::exit(0);
             } else if msg.len() >= 8 && &msg[0..8] == "comments" {
-                // TODO get comments for story
+                let numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                show_comments_for_item(numb, app_domain, app_cache, app_state_machine);
             } else if msg.len() >= 4 && &msg[0..4] == "load" {
                 let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 load_page_to_local(numb, app_domain, app_cache, app_state_machine);
@@ -100,7 +101,6 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                       format!("Retrieved previous ten stories with index {}",
                               &app_state_machine.listing_page_index));
             } else if msg.len() >= 4 && &msg[0..4] == "open" {
-                // https://github.com/overdrivenpotato/url_open/blob/master/src/lib.rs
                 let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
             }
@@ -108,6 +108,34 @@ fn gui_listener(msg_result: Result<String, io::Error>,
         Err(_) => println!("{}", "Error"),
     }
     Ok(())
+}
+fn show_comments_for_item(numb: usize,
+                          app_domain: &mut AppDomain,
+                          app_cache: &mut AppCache,
+                          app_state_machine: &mut AppStateMachine) {
+    let parent = get_item(numb, app_domain, app_cache, app_state_machine).unwrap(); // FIXME No error handling
+    let maybe_vec = client::get_comments_for_item(&parent, app_domain, app_state_machine);
+
+    match maybe_vec {
+        Some(vec) => {
+            cli::print_comments(&parent, &vec);
+            app_cache.last_retrieved_comments = Some(vec);
+        }
+        None => {
+            cli::could_not_get_any_commments_for_item(&parent);
+        } 
+    }
+}
+
+fn get_item(numb: usize,
+            app_domain: &mut AppDomain,
+            app_cache: &mut AppCache,
+            app_state_machine: &mut AppStateMachine)
+            -> Option<HnItem> {
+    let s = format!("{}",
+                    app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
+    let item = client::get_item_by_id(&s, app_domain, app_state_machine).ok();
+    item
 }
 
 fn open_page_with_default_browser(numb: usize,
@@ -136,14 +164,15 @@ fn load_page_to_local(numb: usize,
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
     let filen = client::download_page_from_item(&item, app_domain, app_state_machine);
     match filen {
-        Ok(n) =>  {
+        Ok(n) => {
             cli::print_filename_of_loaded_page(&n, item.title.as_ref().unwrap());
-            info!(&app_domain.logger, format!("Loaded page {} to file {}",  item.url.as_ref().unwrap(), &n));
-        },
+            info!(&app_domain.logger,
+                  format!("Loaded page {} to file {}", item.url.as_ref().unwrap(), &n));
+        }
         Err(e) => {
             cli::could_not_load_page(item.title.as_ref().unwrap());
             warn!(&app_domain.logger, format!("Could not load page to file"));
-        },
+        }
     }
 
 }
