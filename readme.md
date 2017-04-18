@@ -12,4 +12,4 @@ Somewhat working features:
 
 This will be going for hiatus for some time after 0.0.1 as there's some other things I need to do. Not sure on when I'll return to this.
 
-Contributions anb feedback are welcome!
+Contributions and feedback are welcome!
