@@ -84,6 +84,7 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                       format!("Retrieved next ten stories with index {}",
                               &app_state_machine.listing_page_index))
             } else if msg.len() >= 4 && &msg[0..4] == "exit" {
+                info!(&app_domain.logger, "Exited application normally");
                 process::exit(0);
             } else if msg.len() >= 8 && &msg[0..8] == "comments" {
                 // TODO get comments for story
