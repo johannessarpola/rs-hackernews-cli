@@ -2,4 +2,3 @@ before_script: cd cli
 language: rust
 rust:
   - nightly
-script: build.sh
