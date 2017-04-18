@@ -47,6 +47,7 @@ fn main() {
     let mut app_cache: AppCache = AppCache::new();
     let mut app_state_machine: AppStateMachine = AppStateMachine::new();
     let mut main_core = Core::new().expect("Failed to create core");
+
     info!(&app_domain.logger, "Application started");
     app_cache.retrieved_top_stories = get_top_story_ids(&mut app_domain, &mut app_state_machine)
         .ok();
@@ -79,13 +80,11 @@ fn gui_listener(msg_result: Result<String, io::Error>,
             if msg.len() >= 4 && &msg[0..4] == "next" {
                 app_state_machine.listing_page_index += 1;
                 print_ten_stories(app_domain, app_cache, app_state_machine);
-            } else if msg.parse::<i32>().is_ok() {
-                let numb = msg.parse::<i32>().unwrap(); // FIXME not handling errors either
-                println!("{}", numb);
-                // TODO open story by index
+                info!(&app_domain.logger,
+                      format!("Retrieved next ten stories with index {}",
+                              &app_state_machine.listing_page_index))
             } else if msg.len() >= 4 && &msg[0..4] == "exit" {
                 process::exit(0);
-
             } else if msg.len() >= 8 && &msg[0..8] == "comments" {
                 // TODO get comments for story
             } else if msg.len() >= 4 && &msg[0..4] == "load" {
@@ -96,17 +95,13 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                     app_state_machine.listing_page_index -= 1;
                 }
                 print_ten_stories(app_domain, app_cache, app_state_machine);
+                info!(&app_domain.logger,
+                      format!("Retrieved previous ten stories with index {}",
+                              &app_state_machine.listing_page_index));
             } else if msg.len() >= 4 && &msg[0..4] == "open" {
                 // https://github.com/overdrivenpotato/url_open/blob/master/src/lib.rs
                 let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
-                let s = format!("{}",
-                                app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
-                let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
-                if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok() {
-                    println!("{} {}",
-                             "Opened browser to url ",
-                             item.url.as_ref().unwrap());
-                }
+                open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
             }
         }
         Err(_) => println!("{}", "Error"),
@@ -114,14 +109,42 @@ fn gui_listener(msg_result: Result<String, io::Error>,
     Ok(())
 }
 
-fn load_page_to_local(numb: usize, app_domain:&mut AppDomain, app_cache:&mut AppCache, app_state_machine:&mut AppStateMachine) {
-    let s = format!("{}", app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
+fn open_page_with_default_browser(numb: usize,
+                                  app_domain: &mut AppDomain,
+                                  app_cache: &mut AppCache,
+                                  app_state_machine: &mut AppStateMachine) {
+    let s = format!("{}",
+                    app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
+    let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
+    if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok() {
+        println!("{} {}",
+                 "Opened browser to url ",
+                 item.url.as_ref().unwrap());
+        info!(&app_domain.logger,
+              format!("Opened page with default browser from url {}",
+                      item.url.as_ref().unwrap()));
+    }
+}
+
+fn load_page_to_local(numb: usize,
+                      app_domain: &mut AppDomain,
+                      app_cache: &mut AppCache,
+                      app_state_machine: &mut AppStateMachine) {
+    let s = format!("{}",
+                    app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
     let filen = client::download_page_from_item(&item, app_domain, app_state_machine);
     match filen {
-        Ok(n) => cli::print_filename_of_loaded_page(&n, item.title.as_ref().unwrap()),
-        Err(_) => cli::could_not_load_page(item.title.as_ref().unwrap())
+        Ok(n) =>  {
+            cli::print_filename_of_loaded_page(&n, item.title.as_ref().unwrap());
+            info!(&app_domain.logger, format!("Loaded page {} to file {}",  item.url.as_ref().unwrap(), &n));
+        },
+        Err(e) => {
+            cli::could_not_load_page(item.title.as_ref().unwrap());
+            warn!(&app_domain.logger, format!("Could not load page to file"));
+        },
     }
+
 }
 
 
