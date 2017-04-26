@@ -10,6 +10,6 @@ Somewhat working features:
 - Open the link with your default browser (should work with most OS's with the help of Webrowser crate)
 - View first level comments for story
 
-This will be going for hiatus for some time after 0.0.1 as there's some other things I need to do. Not sure on when I'll return to this.
+**This will be on hiatus for an undefined amount of time after 0.0.1 as there's some other things I need to do.** Not sure on when I'll return to this.
 
 Contributions and feedback are welcome!
