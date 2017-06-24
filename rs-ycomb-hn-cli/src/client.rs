@@ -75,7 +75,7 @@ pub fn get_item_by_id(item: &str,
     result
 }
 
-fn get_comments_for_item(item: &HnItem,
+pub fn get_comments_for_item(item: &HnItem,
                          app_domain: &mut AppDomain,
                          state: &mut AppStateMachine)
                          -> Option<Vec<HnItem>> {
@@ -106,8 +106,10 @@ fn get_comments_for_item(item: &HnItem,
                     });
                     core.run(subtask).unwrap()
                 })
-                .collect::<Vec<Vec<_>>>();
-            let items = raw_items.into_iter().map(|chunks| deserialize::<HnItem>(chunks)).collect();
+                .collect::<Vec<Vec<u8>>>();
+            let items = raw_items.into_iter()
+                .map(|chunks| deserialize::<HnItem>(chunks))
+                .collect();
             state.current_state = AppStates::DoingLocalWork;
             Some(items)
         }

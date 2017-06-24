@@ -83,15 +83,28 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 info!(&app_domain.logger,
                       format!("Retrieved next ten stories with index {}",
                               &app_state_machine.listing_page_index))
-            } else if msg.len() >= 4 && &msg[0..4] == "exit" {
+            } 
+            
+            else if msg.len() >= 3 && &msg[0..3] == "top" {
+                print_ten_stories(app_domain, app_cache, app_state_machine);
+            }
+
+            else if msg.len() >= 4 && &msg[0..4] == "exit" {
                 info!(&app_domain.logger, "Exited application normally");
                 process::exit(0);
-            } else if msg.len() >= 8 && &msg[0..8] == "comments" {
-                // TODO get comments for story
-            } else if msg.len() >= 4 && &msg[0..4] == "load" {
+            } 
+            
+            else if msg.len() >= 8 && &msg[0..8] == "comments" {
+                let numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                open_comments(numb, app_domain, app_cache, app_state_machine);
+            } 
+            
+            else if msg.len() >= 4 && &msg[0..4] == "load" {
                 let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 load_page_to_local(numb, app_domain, app_cache, app_state_machine);
-            } else if msg.len() >= 4 && &msg[0..4] == "back" {
+            } 
+            
+            else if msg.len() >= 4 && &msg[0..4] == "back" {
                 if app_state_machine.listing_page_index >= 0 {
                     app_state_machine.listing_page_index -= 1;
                 }
@@ -99,8 +112,9 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 info!(&app_domain.logger,
                       format!("Retrieved previous ten stories with index {}",
                               &app_state_machine.listing_page_index));
-            } else if msg.len() >= 4 && &msg[0..4] == "open" {
-                // https://github.com/overdrivenpotato/url_open/blob/master/src/lib.rs
+            } 
+            
+            else if msg.len() >= 4 && &msg[0..4] == "open" {
                 let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
             }
@@ -136,14 +150,15 @@ fn load_page_to_local(numb: usize,
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
     let filen = client::download_page_from_item(&item, app_domain, app_state_machine);
     match filen {
-        Ok(n) =>  {
+        Ok(n) => {
             cli::print_filename_of_loaded_page(&n, item.title.as_ref().unwrap());
-            info!(&app_domain.logger, format!("Loaded page {} to file {}",  item.url.as_ref().unwrap(), &n));
-        },
+            info!(&app_domain.logger,
+                  format!("Loaded page {} to file {}", item.url.as_ref().unwrap(), &n));
+        }
         Err(e) => {
             cli::could_not_load_page(item.title.as_ref().unwrap());
             warn!(&app_domain.logger, format!("Could not load page to file"));
-        },
+        }
     }
 
 }
@@ -165,5 +180,18 @@ fn print_ten_stories(app_domain: &mut AppDomain,
         let s = format!("{}", item_id);
         let item: HnItem = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
         cli::print_headline_with_author(&item, &index);
+    }
+}
+
+fn open_comments(numb: usize,
+                 app_domain: &mut AppDomain,
+                 app_cache: &mut AppCache,
+                 app_state_machine: &mut AppStateMachine) {
+    let s = format!("{}",
+                    app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]);
+    let item: HnItem = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap(); // todo cache
+    match client::get_comments_for_item(&item, app_domain, app_state_machine) {
+        Some(ref items) => cli::print_comments(items),
+        None => cli::no_comments_for(&numb),
     }
 }
