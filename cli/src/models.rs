@@ -42,6 +42,12 @@ pub struct HnItem {
     pub url: Option<String>,
 }
 
+pub struct HnItemCommentMap {
+    pub parent: HnItem,
+    pub comments: Vec<HnItem>,
+    pub depth: usize,
+}
+
 impl HnItem {
     pub fn to_json(&self) -> String {
         serde_json::to_string(&self).unwrap()
