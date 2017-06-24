@@ -147,7 +147,7 @@ pub fn download_page_from_item(item: &HnItem,
             let core = &mut app_domain.core;
             let logger = &mut app_domain.logger;
             let uri = utils::parse_url_from_str(url);
-            let mut filename: String = utils::combine_strings(vec!(&uri.path().replace("/", "_"), ".html")); // TODO Improve naming at some point
+            let mut filename: String = utils::filename_for_hnitem(&item);
             let path = Path::new(&filename);
             let mut file: File =
                 OpenOptions::new().write(true).create(true).open(path.as_os_str()).unwrap();

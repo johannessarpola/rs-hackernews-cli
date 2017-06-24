@@ -1,5 +1,6 @@
 use hyper::{Uri, StatusCode};
 use slog::*;
+use models::HnItem;
 
 pub fn log_response_status(logger: &Logger, url: &str, status: &StatusCode) {
     info!(logger,
@@ -17,6 +18,17 @@ pub fn parse_url_from_str(url_str: &str) -> Uri {
     let url_str = String::from(url_str);
     let url = url_str.parse::<Uri>().unwrap();
     url
+}
+
+pub fn filename_for_hnitem(item: &HnItem) -> String {
+    match item.title {
+        Some(ref title) => return combine_strings(vec![&title, &item.by, ".html"]),
+        None => {
+            return combine_strings(vec![
+                &parse_url_from_str(&item.url.as_ref().unwrap()).path().replace("/", "_")
+                ,".html"])
+        }
+    }
 }
 
 #[cfg(test)]
