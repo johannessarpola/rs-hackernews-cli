@@ -96,7 +96,7 @@ fn gui_listener(msg_result: Result<String, io::Error>,
             
             else if msg.len() >= 8 && &msg[0..8] == "comments" {
                 let numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
-                open_comments(numb, app_domain, app_cache, app_state_machine);
+                show_comments_for_item(numb, app_domain, app_cache, app_state_machine);
             } 
             
             else if msg.len() >= 4 && &msg[0..4] == "load" {
@@ -208,18 +208,5 @@ fn print_ten_stories(app_domain: &mut AppDomain,
         let s = format!("{}", item_id);
         let item: HnItem = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
         cli::print_headline_with_author(&item, &index);
-    }
-}
-
-fn open_comments(numb: usize,
-                 app_domain: &mut AppDomain,
-                 app_cache: &mut AppCache,
-                 app_state_machine: &mut AppStateMachine) {
-    let s = format!("{}",
-                    app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]);
-    let item: HnItem = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap(); // todo cache
-    match client::get_comments_for_item(&item, app_domain, app_state_machine) {
-        Some(ref items) => cli::print_comments(items),
-        None => cli::no_comments_for(&numb),
     }
 }

@@ -20,13 +20,6 @@ fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, Str
     }
 }
 
-pub fn print_comments(items: &Vec<HnItem>) {
-    println!("Comments: \n");
-    for item in items {
-        println!("{}", create_comment_string(item, &1).unwrap()); // todo depth and error handling
-    }
-}
-
 fn create_comment_string(item:&HnItem, depth:&usize) -> Result<String, String> {
     let depthStr = repeat("-").take(*depth).collect::<String>();
     if(item.text.is_some()) {
