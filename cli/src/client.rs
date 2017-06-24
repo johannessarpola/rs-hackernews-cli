@@ -143,7 +143,8 @@ fn request_item(item: &str,
 
 pub fn download_page_from_item(item: &HnItem,
                                app_domain: &mut AppDomain,
-                               state: &mut AppStateMachine) -> Result<String, String> {
+                               state: &mut AppStateMachine)
+                               -> Result<String, String> {
     match item.url {
         Some(ref url) => {
             let core = &mut app_domain.core;

@@ -13,10 +13,15 @@ impl Deserialize for HnListOfItems {
         Deserialize::deserialize(deserializer).map(|arr: Vec<i32>| HnListOfItems { values: arr })
     }
 }
+
+fn default_user() -> String {
+    String::from("Undefined user")
+}
 // TODO Add simple decision tree to deduct is it probably a post, comment or something different
 #[derive(Serialize, Deserialize)]
 pub struct HnItem {
-    pub by: String,
+    #[serde(default = "default_user")]
+    pub by: String, // TODO For some reason some 'by' are undefined, might be the case with removed comments
     #[serde(skip_serializing_if="Option::is_none")]
     pub parent: Option<i32>,
     #[serde(skip_serializing_if="Option::is_none")]
@@ -38,10 +43,10 @@ pub struct HnItem {
 }
 
 impl HnItem {
-    pub fn to_json(&self) -> String{
+    pub fn to_json(&self) -> String {
         serde_json::to_string(&self).unwrap()
     }
-    pub fn to_json_pretty(&self) -> String{
+    pub fn to_json_pretty(&self) -> String {
         serde_json::to_string_pretty(&self).unwrap()
     }
 }

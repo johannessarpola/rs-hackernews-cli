@@ -123,6 +123,34 @@ fn gui_listener(msg_result: Result<String, io::Error>,
     }
     Ok(())
 }
+fn show_comments_for_item(numb: usize,
+                          app_domain: &mut AppDomain,
+                          app_cache: &mut AppCache,
+                          app_state_machine: &mut AppStateMachine) {
+    let parent = get_item(numb, app_domain, app_cache, app_state_machine).unwrap(); // FIXME No error handling
+    let maybe_vec = client::get_comments_for_item(&parent, app_domain, app_state_machine);
+
+    match maybe_vec {
+        Some(vec) => {
+            cli::print_comments(&parent, &vec);
+            app_cache.last_retrieved_comments = Some(vec);
+        }
+        None => {
+            cli::could_not_get_any_commments_for_item(&parent);
+        } 
+    }
+}
+
+fn get_item(numb: usize,
+            app_domain: &mut AppDomain,
+            app_cache: &mut AppCache,
+            app_state_machine: &mut AppStateMachine)
+            -> Option<HnItem> {
+    let s = format!("{}",
+                    app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
+    let item = client::get_item_by_id(&s, app_domain, app_state_machine).ok();
+    item
+}
 
 fn open_page_with_default_browser(numb: usize,
                                   app_domain: &mut AppDomain,
