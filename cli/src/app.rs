@@ -25,8 +25,10 @@ pub struct AppCache {
     pub retrieved_best_stories: Option<HnListOfItems>,
     pub retrieved_new_stories: Option<HnListOfItems>,
     pub last_retrieved_item: Option<HnItem>,
+    pub last_parent_item: Option<HnItem>,
     pub last_retrieved_comments: Option<Vec<HnItem>>,
 }
+
 impl AppCache {
     pub fn new() -> AppCache {
         AppCache {
@@ -34,6 +36,7 @@ impl AppCache {
             retrieved_best_stories: None,
             retrieved_new_stories: None,
             last_retrieved_item: None,
+            last_parent_item: None,
             last_retrieved_comments: None,
         }
     }

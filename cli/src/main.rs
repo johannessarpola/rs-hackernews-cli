@@ -133,7 +133,8 @@ fn show_comments_for_item(numb: usize,
     match maybe_vec {
         Some(vec) => {
             cli::print_comments(&parent, &vec);
-            app_cache.last_retrieved_comments = Some(vec);
+            app_cache.last_parent_item = Some(parent); // move parent to this location    
+            app_cache.last_retrieved_comments = Some(vec); // return comments and return
         }
         None => {
             cli::could_not_get_any_commments_for_item(&parent);
