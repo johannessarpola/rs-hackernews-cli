@@ -92,7 +92,7 @@ pub fn get_comments_for_item(item: &HnItem,
                   format!("Retrieving comments for {} with {} comments",
                           &item.id,
                           kids.len()));
-            let raw_items = comments.iter()
+            let items = comments.iter()
                 .map(|item_id| {
                     (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint))
                 })
@@ -106,10 +106,10 @@ pub fn get_comments_for_item(item: &HnItem,
                     });
                     core.run(subtask).unwrap()
                 })
-                .collect::<Vec<Vec<u8>>>();
-            let items = raw_items.into_iter()
+                .collect::<Vec<Vec<u8>>>()
+                .into_iter()
                 .map(|chunks| deserialize::<HnItem>(chunks))
-                .collect();
+                .collect::<Vec<HnItem>>();
             state.current_state = AppStates::DoingLocalWork;
             Some(items)
         }
