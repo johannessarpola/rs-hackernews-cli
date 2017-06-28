@@ -96,7 +96,17 @@ fn gui_listener(msg_result: Result<String, io::Error>,
             
             else if msg.len() >= 8 && &msg[0..8] == "comments" {
                 let numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
-                show_comments_for_item(numb, app_domain, app_cache, app_state_machine);
+                load_comments_for_item(numb, app_domain, app_cache, app_state_machine);
+                let parent = app_cache.last_parent_items.back();
+                match parent {
+                    Some(ref parent) => {
+                        match app_cache.last_retrieved_comments {
+                            Some(ref comments) => cli::print_comments(parent, &comments),
+                            None => cli::could_not_get_any_commments_for_item(parent), 
+                        }
+                    }
+                    None => ()
+                }
             } 
             
             else if msg.len() >= 4 && &msg[0..4] == "load" {
@@ -123,22 +133,20 @@ fn gui_listener(msg_result: Result<String, io::Error>,
     }
     Ok(())
 }
-fn show_comments_for_item(numb: usize,
+
+fn load_comments_for_item(numb: usize,
                           app_domain: &mut AppDomain,
                           app_cache: &mut AppCache,
                           app_state_machine: &mut AppStateMachine) {
     let parent = get_item(numb, app_domain, app_cache, app_state_machine).unwrap(); // FIXME No error handling
-    let maybe_vec = client::get_comments_for_item(&parent, app_domain, app_state_machine);
+    let comments = client::get_comments_for_item(&parent, app_domain, app_state_machine);
 
-    match maybe_vec {
-        Some(vec) => {
-            cli::print_comments(&parent, &vec);
-            app_cache.last_parent_item = Some(parent); // move parent to this location    
-            app_cache.last_retrieved_comments = Some(vec); // return comments and return
+    match comments {
+        Some(commentVec) => {
+            app_cache.last_parent_items.push_back(parent); // move parent to this location    
+            app_cache.last_retrieved_comments = Some(commentVec); // return comments and return
         }
-        None => {
-            cli::could_not_get_any_commments_for_item(&parent);
-        } 
+        None => ()
     }
 }
 
@@ -191,7 +199,6 @@ fn load_page_to_local(numb: usize,
     }
 
 }
-
 
 fn print_ten_stories(app_domain: &mut AppDomain,
                      app_cache: &mut AppCache,
