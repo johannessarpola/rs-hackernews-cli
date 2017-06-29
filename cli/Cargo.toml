@@ -1,6 +1,6 @@
 [package]
-name = "rs-ycomb"
-version = "0.1.0"
+name = "rs-hackernews-cli"
+version = "0.2.0"
 authors = ["Johannes Sarpola <johannes.sarpola@gmail.com>"]
 
 [dependencies]
