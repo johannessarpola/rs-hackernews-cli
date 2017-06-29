@@ -20,17 +20,20 @@ fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, Str
     }
 }
 
-fn create_comment_string(item:&HnItem, depth:&usize) -> Result<String, String> {
+fn create_comment_string(item: &HnItem, depth: &usize) -> Result<String, String> {
     let depthStr = repeat("-").take(*depth).collect::<String>();
-    if(item.text.is_some()) {
-        return Ok(format!("{} {} ~ {} on {}", depthStr, item.text.as_ref().unwrap(), &item.by, &item.time))
-    }
-    else {
-        return Err(String::from("Could not get text for comment"))
+    if (item.text.is_some()) {
+        return Ok(format!("{} {} ~ {} on {}",
+                          depthStr,
+                          item.text.as_ref().unwrap(),
+                          &item.by,
+                          &item.time));
+    } else {
+        return Err(String::from("Could not get text for comment"));
     }
 }
 
-pub fn no_comments_for(numb:&usize) {
+pub fn no_comments_for(numb: &usize) {
     println!("No comments for [{}]", numb);
 }
 
@@ -45,20 +48,31 @@ pub fn could_not_load_page(title: &str) {
     println!("Could not download to file with title {}", title);
 }
 
-pub fn print_comments(item: &HnItem, vec: &Vec<HnItem>) {
+pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
     // FIXME No error handling
-    println!("Comments for item id {} with title {}",
-             &item.id,
-             item.title.as_ref().unwrap());
-    let mut comment_index = 0;
-    for comment in vec {
-        comment_index += 1; // Should be from main?
-        let res = create_comment_row(&comment_index, &comment);
-        if (res.is_some()) {
-            println!("{}", res.unwrap());
+    if (comments.len() > 0) {
+        match item.title {
+            Some(ref title) => {
+                println!("Comments for item id {} with title {}",
+                         &item.id,
+                         item.title.as_ref().unwrap())
+            }
+            None => println!("Comments for item id {}", &item.id),
+        }
+        let mut comment_index = 0;
+        for comment in comments {
+            comment_index += 1; // Should be from main?
+            let res = create_comment_row(&comment_index, &comment);
+            if (res.is_some()) {
+                println!("{}", res.unwrap());
+            }
         }
     }
+    else {
+        println!("No comments for {}", item.id);
+    }
 }
+
 fn create_comment_row(index: &i32, item: &HnItem) -> Option<String> {
     match item.text {
         Some(ref text) => {
@@ -108,6 +122,6 @@ mod tests {
         assert!(commentStr.contains("is not a valid concern. Unless you are planning"));
         assert!(commentStr.contains("cholantesh"));
         assert!(commentStr.contains("-- "));
-        
+
     }
 }
