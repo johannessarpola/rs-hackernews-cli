@@ -37,9 +37,6 @@ use std::process;
 use futures::{Stream, Sink, Future};
 use futures::sync::mpsc;
 use futures::sync::mpsc::{Receiver, Sender};
-use futures::stream::BoxStream;
-use curl::easy::Easy;
-
 
 fn main() {
 
@@ -52,7 +49,7 @@ fn main() {
     app_cache.retrieved_top_stories = get_top_story_ids(&mut app_domain, &mut app_state_machine)
         .ok();
     print_ten_stories(&mut app_domain, &mut app_cache, &mut app_state_machine);
-    let (mut sender, receiver) = mpsc::channel(1);
+    let (sender, receiver) = mpsc::channel(1);
 
     spawn(move || {
         let stdin = io::stdin();
@@ -92,6 +89,22 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 let numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
                 let parent = app_cache.last_parent_items.back();
+                // todo move to method
+                match parent {
+                    Some(ref parent) => {
+                        match app_cache.last_retrieved_comments {
+                            Some(ref comments) => cli::print_comments(parent, &comments),
+                            None => cli::could_not_get_any_commments_for_item(parent), 
+                        }
+                    }
+                    None => (),
+                }
+            } else if msg.len() >= 8 && &msg[0..6] == "expand" {
+                // todo handle non retreived comments
+                let numb = (msg[7..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                load_comments_for_commment(numb, app_domain, app_cache, app_state_machine);
+                let parent = app_cache.last_parent_items.back();
+                // todo move to method
                 match parent {
                     Some(ref parent) => {
                         match app_cache.last_retrieved_comments {
@@ -127,25 +140,28 @@ fn load_comments_for_story(numb: usize,
                            app_cache: &mut AppCache,
                            app_state_machine: &mut AppStateMachine) {
     let parent = get_story(numb, app_domain, app_cache, app_state_machine).unwrap(); // FIXME No error handling
-    load_comments_for_item(parent, app_domain, app_cache, app_state_machine)
+    retrieve_comments_for_item(parent, app_domain, app_cache, app_state_machine)
 }
 
 fn load_comments_for_commment(numb: usize,
                               app_domain: &mut AppDomain,
-                              app_cache: &mut AppCache,
+                              mut app_cache: &mut AppCache,
                               app_state_machine: &mut AppStateMachine) {
-    // todo
+    let item = app_cache.get_comment(numb);
+    if item.is_some() {
+        retrieve_comments_for_item(item.unwrap(), app_domain, app_cache, app_state_machine);
+    }
 }
 
-fn load_comments_for_item(parent: HnItem,
-                          app_domain: &mut AppDomain,
-                          app_cache: &mut AppCache,
-                          app_state_machine: &mut AppStateMachine) {
+fn retrieve_comments_for_item(parent: HnItem,
+                              app_domain: &mut AppDomain,
+                              app_cache: &mut AppCache,
+                              app_state_machine: &mut AppStateMachine) {
     let comments = client::get_comments_for_item(&parent, app_domain, app_state_machine);
     match comments {
-        Some(commentVec) => {
+        Some(comments_vector) => {
             app_cache.last_parent_items.push_back(parent); // move parent to this location
-            app_cache.last_retrieved_comments = Some(commentVec); // return comments and return
+            app_cache.last_retrieved_comments = Some(comments_vector); // return comments and return
         }
         None => (),
     }
@@ -195,7 +211,8 @@ fn load_page_to_local(numb: usize,
         }
         Err(e) => {
             cli::could_not_load_page(item.title.as_ref().unwrap());
-            warn!(&app_domain.logger, format!("Could not load page to file"));
+            warn!(&app_domain.logger,
+                  format!("Could not load page to file {}", e));
         }
     }
 

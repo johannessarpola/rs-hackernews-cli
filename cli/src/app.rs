@@ -41,6 +41,12 @@ impl AppCache {
             last_retrieved_comments: None,
         }
     }
+    pub fn get_comment(&mut self, numb:usize) ->  Option<HnItem> {
+        match self.last_retrieved_comments {
+            Some(ref mut comments) => Some(comments.remove(numb)),
+            None => None
+        }
+    }
 }
 
 pub enum AppStates {
@@ -134,3 +140,5 @@ fn create_loggers() -> slog::Logger {
                            o!());
     logger
 }
+
+// todo some tests
