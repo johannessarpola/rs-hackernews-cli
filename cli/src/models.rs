@@ -1,5 +1,6 @@
 use serde::{Deserialize, Deserializer};
 use serde_json;
+use text_decoding::decode_html;
 
 #[derive(Serialize)]
 pub struct HnListOfItems {
@@ -47,7 +48,19 @@ pub struct HnItemCommentMap {
     pub comments: Vec<HnItem>,
     pub depth: usize,
 }
+
 impl HnItem {
+    pub fn text_unescaped(&self) -> Option<String> {
+        if (self.text.is_some()) {
+            let unescaped = decode_html(self.text.as_ref().unwrap());
+            if unescaped.is_ok() {
+                let unwrapped = unescaped.unwrap();
+                return Some(unwrapped)
+            }
+        }
+        None
+    }
+
     pub fn to_json(&self) -> String {
         serde_json::to_string(&self).unwrap()
     }
@@ -91,6 +104,21 @@ mod tests {
         assert_eq!("http://www.getdropbox.com/u/2/screencast.html",
                    deserialized.url.unwrap());
     }
+
+    #[test]
+    fn hn_item_decode_test() {
+        use std::fs::File;
+        use std::io::prelude::*;
+        let mut contents = String::new();
+        File::open("res/test/children-item.json")
+            .and_then(|mut file| file.read_to_string(&mut contents))
+            .unwrap();
+        let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
+        let text_decoded = deserialized.text_unescaped().unwrap();
+        println!("{}", text_decoded);
+        assert!(!text_decoded.contains("&#x2F;"));
+    }
+
     #[test]
     fn hn_top_stories_serde_test() {
         use std::fs::File;

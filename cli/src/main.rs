@@ -23,6 +23,9 @@ mod client;
 mod app;
 mod endpoint;
 mod cli;
+mod text_decoding;
+mod text_decoding_entities;
+mod text_decoding_io;
 
 use app::*;
 use models::*;
