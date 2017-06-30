@@ -1,5 +1,6 @@
 use models::*;
 use std::iter::repeat;
+use termion::{color, style};
 
 pub fn print_headline_with_author(item: &HnItem, index: &i32) {
     let s = create_headline_with_author(item, index).unwrap(); // Not handling errs
@@ -20,23 +21,6 @@ fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, Str
     }
 }
 
-fn create_comment_string(item: &HnItem, depth: &usize) -> Result<String, String> {
-    let depthStr = repeat("-").take(*depth).collect::<String>();
-    if (item.text.is_some()) {
-        return Ok(format!("{} {} ~ {} on {}",
-                          depthStr,
-                          item.text.as_ref().unwrap(),
-                          &item.by,
-                          &item.time));
-    } else {
-        return Err(String::from("Could not get text for comment"));
-    }
-}
-
-pub fn no_comments_for(numb: &usize) {
-    println!("No comments for [{}]", numb);
-}
-
 pub fn could_not_get_any_commments_for_item(item: &HnItem) {
     println!("Could not get comments for item with id {}", item.id)
 }
@@ -54,7 +38,7 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
             Some(ref title) => {
                 println!("Comments for item id {} with title {}",
                          &item.id,
-                         item.title.as_ref().unwrap())
+                         title)
             }
             None => println!("Comments for item id {}", &item.id),
         }
@@ -62,12 +46,11 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
         for comment in comments {
             comment_index += 1; // Should be from main?
             let res = create_comment_row(&comment_index, &comment);
-            if (res.is_some()) {
+            if res.is_some() {
                 println!("{}", res.unwrap());
             }
         }
-    }
-    else {
+    } else {
         println!("No comments for {}", item.id);
     }
 }

@@ -108,17 +108,16 @@ fn configure_client(handle: &Handle) -> Client<HttpsConnector> {
 impl AppDomain {
     pub fn new() -> AppDomain {
         let logger = create_loggers();
-        let mut core = Core::new().expect("Failed to create core");
+        let core = Core::new().expect("Failed to create core");
         let handle = core.handle();
         let client = configure_client(&handle);
         let endpoint = HnNewsEndpoint::build_default();
-        let mut app_domain = AppDomain {
+        AppDomain {
             core: core,
             endpoint: endpoint,
             client: client,
             logger: logger,
-        };
-        app_domain
+        }
     }
 }
 

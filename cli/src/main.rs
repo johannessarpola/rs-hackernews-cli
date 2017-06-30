@@ -13,9 +13,9 @@ extern crate hyper;
 extern crate tokio_core;
 extern crate hyper_tls;
 extern crate time;
-extern crate clap; // TODO Add application help
 extern crate curl;
 extern crate webbrowser;
+extern crate termion;
 
 mod utils;
 mod models;
@@ -30,16 +30,13 @@ mod text_decoding_io;
 use app::*;
 use models::*;
 use client::*;
-use cli::*;
 
-use tokio_core::reactor::{Core, Handle};
+use tokio_core::reactor::{Core};
 use std::io::{self, BufRead};
 use std::thread::spawn;
-use std::thread;
 use std::process;
 use futures::{Stream, Sink, Future};
 use futures::sync::mpsc;
-use futures::sync::mpsc::{Receiver, Sender};
 
 fn main() {
 
@@ -66,7 +63,7 @@ fn main() {
             gui_listener(msg, &mut app_domain, &mut app_cache, &mut app_state_machine)
         });
 
-    main_core.run(listener);
+    let result = main_core.run(listener);
 }
 
 fn gui_listener(msg_result: Result<String, io::Error>,

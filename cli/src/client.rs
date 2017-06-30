@@ -1,4 +1,4 @@
-use hyper::{Uri, Client, Method, Error, StatusCode};
+use hyper::{Uri, Client, Method, Error};
 use hyper::header::UserAgent;
 use hyper::client::{Request, FutureResponse};
 use hyper_tls::HttpsConnector;
@@ -8,12 +8,10 @@ use serde_json;
 use serde::Deserialize;
 
 use std::fs::{File, OpenOptions}; // TODO file writing to utils.rs
-use std::io::prelude::*;
 use std::io::Write;
 use std::path::Path;
 
 use curl::easy::Easy;
-use curl::easy;
 use utils::{parse_url_from_str, log_response_status};
 use utils;
 use models::*;
@@ -146,17 +144,16 @@ pub fn download_page_from_item(item: &HnItem,
                                state: &mut AppStateMachine)
                                -> Result<String, String> {
     match item.url {
+        // todo change to async
         Some(ref url) => {
-            let core = &mut app_domain.core;
-            let logger = &mut app_domain.logger;
             let uri = utils::parse_url_from_str(url);
-            let mut filename: String = utils::filename_for_hnitem(&item);
+            let filename: String = utils::filename_for_hnitem(&item);
             let path = Path::new(&filename);
             let mut file: File =
                 OpenOptions::new().write(true).create(true).open(path.as_os_str()).unwrap();
 
             let v = curl_req(url);
-            let s = String::from_utf8(v).unwrap(); // TODO Handle errs
+            let s = String::from_utf8(v).unwrap(); // TODO errors
             file.write_all(s.as_bytes());
             Ok(String::from(path.as_os_str().to_str().unwrap())) // should probably be path to string
         }
