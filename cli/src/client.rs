@@ -107,6 +107,7 @@ pub fn get_comments_for_item(item: &HnItem,
                 .collect::<Vec<Vec<u8>>>()
                 .into_iter()
                 .map(|chunks| deserialize::<HnItem>(chunks))
+                .filter(|item:&HnItem| item.text.is_some()) // for some reason there are comments which have no text
                 .collect::<Vec<HnItem>>();
             state.current_state = AppStates::DoingLocalWork;
             Some(items)
