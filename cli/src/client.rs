@@ -193,6 +193,8 @@ fn common_headers(req: &mut Request) {
 
 #[cfg(test)]
 mod tests {
+    use hyper::{StatusCode};
+
     use super::*;
     use app::*;
 

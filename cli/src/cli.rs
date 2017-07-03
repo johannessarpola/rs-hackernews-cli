@@ -103,7 +103,7 @@ mod tests {
     }
 
     #[test]
-    fn create_comment_string_test() {
+    fn create_comment_row_test() {
         use std::fs::File;
         use std::io::prelude::*;
         use serde_json;
@@ -112,10 +112,9 @@ mod tests {
             .and_then(|mut file| file.read_to_string(&mut contents))
             .unwrap();
         let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
-        let commentStr = create_comment_string(&deserialized, &2).unwrap();
+        let commentStr = create_comment_row(&1, &deserialized).unwrap();
         assert!(commentStr.contains("is not a valid concern. Unless you are planning"));
         assert!(commentStr.contains("cholantesh"));
-        assert!(commentStr.contains("-- "));
 
     }
 
