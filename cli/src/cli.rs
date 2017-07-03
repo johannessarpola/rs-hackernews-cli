@@ -1,6 +1,10 @@
 use models::*;
 use std::iter::repeat;
-use termion::{color, style};
+use cli_colors;
+
+const fg: cli_colors::Foreground = cli_colors::Foreground;
+const bg: cli_colors::Background = cli_colors::Background;
+
 
 pub fn print_headline_with_author(item: &HnItem, index: &i32) {
     let s = create_headline_with_author(item, index).unwrap(); // Not handling errs
@@ -35,24 +39,32 @@ pub fn could_not_load_page(title: &str) {
 pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
     if (comments.len() > 0) {
         match item.title {
-            Some(ref title) => {
-                println!("Comments for item id {} with title {}",
-                         &item.id,
-                         title)
-            }
+            Some(ref title) => println!("Comments for item id {} with title {}", &item.id, title),
             None => println!("Comments for item id {}", &item.id),
         }
         let mut comment_index = 0;
         for comment in comments {
-            comment_index += 1; // Should be from main?
+            comment_index += 1;
             let res = create_comment_row(&comment_index, &comment);
             if res.is_some() {
+                if comment_index % 2 == 0 {
+                    bg.lgrey();
+                    fg.lwhite();
+                }
+                //if comment_index % 2 == 0 { fg.rgb(5,5,5); }
+                //else { fg.rgb(3,3,3); }
+
                 println!("{}", res.unwrap());
+                bg.reset();
+                fg.reset();
+            } else {
+                comment_index -= 1;
             }
         }
     } else {
         println!("No comments for {}", item.id);
     }
+    println!(""); // this adds extra space after comments and prevent the input being interfered with bg coloring
 }
 
 fn create_comment_row(index: &i32, item: &HnItem) -> Option<String> {
@@ -106,4 +118,7 @@ mod tests {
         assert!(commentStr.contains("-- "));
 
     }
+
+    #[test]
+    fn test_cli_color() {}
 }
