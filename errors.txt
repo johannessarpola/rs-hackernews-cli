@@ -2,3 +2,5 @@ thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: ErrorImp
 note: Run with `RUST_BACKTRACE=1` for a backtrace.
 
 > By can be null ??
+
+BUG: If ther are no comments when calling 'expand' it pops the expanded comment and prints the same comments again
