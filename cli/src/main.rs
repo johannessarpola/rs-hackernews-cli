@@ -32,7 +32,7 @@ use app::*;
 use models::*;
 use client::*;
 
-use tokio_core::reactor::{Core};
+use tokio_core::reactor::Core;
 use std::io::{self, BufRead};
 use std::thread::spawn;
 use std::process;
@@ -89,17 +89,8 @@ fn gui_listener(msg_result: Result<String, io::Error>,
             } else if msg.len() >= 8 && &msg[0..8] == "comments" {
                 let numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
-                let parent = app_cache.last_parent_items.back();
-                // todo move to method
-                match parent {
-                    Some(ref parent) => {
-                        match app_cache.last_retrieved_comments {
-                            Some(ref comments) => cli::print_comments(parent, &comments),
-                            None => cli::could_not_get_any_commments_for_item(parent), 
-                        }
-                    }
-                    None => (),
-                }
+                cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
+                                              &app_cache.last_retrieved_comments);
             } else if msg.len() >= 8 && &msg[0..6] == "expand" {
                 // todo handle non retreived comments
                 let numb = (msg[7..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either

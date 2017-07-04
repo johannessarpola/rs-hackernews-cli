@@ -5,6 +5,17 @@ use cli_colors;
 const fg: cli_colors::Foreground = cli_colors::Foreground;
 const bg: cli_colors::Background = cli_colors::Background;
 
+pub fn print_comment_and_parent(item: &Option<&HnItem>, comments: &Option<Vec<HnItem>>) {
+    match *item {
+        Some(ref item) => {
+            match *comments {
+                Some(ref comments) => print_comments(item, comments),
+                None => could_not_get_any_commments_for_item(item), 
+            }
+        }
+        None => (),
+    }
+}
 
 pub fn print_headline_with_author(item: &HnItem, index: &i32) {
     let s = create_headline_with_author(item, index).unwrap(); // Not handling errs
@@ -64,7 +75,7 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
     } else {
         println!("No comments for {}", item.id);
     }
-    println!(""); // this adds extra space after comments and prevent the input being interfered with bg coloring
+    println!("") // this adds extra space after comments and prevent the input being interfered with bg coloring
 }
 
 fn create_comment_row(index: &i32, item: &HnItem) -> Option<String> {
