@@ -3,4 +3,5 @@ note: Run with `RUST_BACKTRACE=1` for a backtrace.
 
 > By can be null ??
 
-BUG: If ther are no comments when calling 'expand' it pops the expanded comment and prints the same comments again
+BUG: If there are no comments when calling 'expand' it pops the expanded comment and prints the same comments again
+BUG: Similar to above, if there are no comments for a story, "no comments" won't be printed

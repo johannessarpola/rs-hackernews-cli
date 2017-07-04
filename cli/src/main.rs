@@ -73,6 +73,7 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 app_state_machine: &mut AppStateMachine)
                 -> Result<(), ()> {
     // TODO Logging
+    let mut numb = 0;
     match msg_result {
         Ok(msg) => {
             if msg.len() >= 4 && &msg[0..4] == "next" {
@@ -87,27 +88,18 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                 info!(&app_domain.logger, "Exited application normally");
                 process::exit(0);
             } else if msg.len() >= 8 && &msg[0..8] == "comments" {
-                let numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
                 cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
                                               &app_cache.last_retrieved_comments);
             } else if msg.len() >= 8 && &msg[0..6] == "expand" {
                 // todo handle non retreived comments
-                let numb = (msg[7..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                numb = (msg[7..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 load_comments_for_commment(numb, app_domain, app_cache, app_state_machine);
-                let parent = app_cache.last_parent_items.back();
-                // todo move to method
-                match parent {
-                    Some(ref parent) => {
-                        match app_cache.last_retrieved_comments {
-                            Some(ref comments) => cli::print_comments(parent, &comments),
-                            None => cli::could_not_get_any_commments_for_item(parent), 
-                        }
-                    }
-                    None => (),
-                }
+                cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
+                                              &app_cache.last_retrieved_comments);
             } else if msg.len() >= 4 && &msg[0..4] == "load" {
-                let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 load_page_to_local(numb, app_domain, app_cache, app_state_machine);
             } else if msg.len() >= 4 && &msg[0..4] == "back" {
                 if app_state_machine.listing_page_index >= 0 {
@@ -118,7 +110,7 @@ fn gui_listener(msg_result: Result<String, io::Error>,
                       format!("Retrieved previous ten stories with index {}",
                               &app_state_machine.listing_page_index));
             } else if msg.len() >= 4 && &msg[0..4] == "open" {
-                let numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
+                numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
                 open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
             }
         }
