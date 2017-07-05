@@ -62,8 +62,8 @@ fn main() {
             sender.send(line).wait().unwrap();
         }
     });
-    let listener = receiver.for_each(|msg| {
-        let optionCmd = UiCommand::parse(msg);
+    let listener = receiver.for_each(|verb| {
+        let optionCmd = UiCommand::parse(verb);
         match optionCmd {
             Some(cmd) => {
                 logging_utils::log_cmd(&app_domain.logger, &cmd);
@@ -88,41 +88,41 @@ fn gui_listener(cmd: UiCommand,
 
     if (cmd.command.is_some()) {
 
-        let msg:String = cmd.command.unwrap();
+        let verb:String = cmd.command.unwrap();
         let mut numb:usize = 0;
-        let mut is_numb = false;
+        let mut has_numb = false;
         if(cmd.number.is_some()) {
             numb = cmd.number.unwrap();
-            is_numb = true;
+            has_numb = true;
         }
 
-        if msg == "next" {
+        if verb == "next" {
             app_state_machine.listing_page_index += 1;
             print_ten_stories(app_domain, app_cache, app_state_machine);
             logging_utils::log_stories_page_with_index(&app_domain.logger, app_state_machine.listing_page_index)
-        } else if msg == "top" {
+        } else if verb == "top" {
             print_ten_stories(app_domain, app_cache, app_state_machine);
-        } else if msg == "exit" {
+        } else if verb == "exit" {
             logging_utils::log_exit(&app_domain.logger);
             process::exit(0);
-        } else if msg == "comments" && is_numb  {
+        } else if verb == "comments" && has_numb  {
             load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
             cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
                                           &app_cache.last_retrieved_comments);
-        } else if msg == "expand" && is_numb {
+        } else if verb == "expand" && has_numb {
             // todo handle non retreived comments
             load_comments_for_commment(numb, app_domain, app_cache, app_state_machine);
             cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
                                           &app_cache.last_retrieved_comments);
-        } else if msg == "load" && is_numb {
+        } else if verb == "load" && has_numb {
             load_page_to_local(numb, app_domain, app_cache, app_state_machine);
-        } else if msg == "back" {
+        } else if verb == "back" {
             if app_state_machine.listing_page_index >= 0 {
                 app_state_machine.listing_page_index -= 1;
             }
             print_ten_stories(app_domain, app_cache, app_state_machine);
             logging_utils::log_stories_page_with_index(&app_domain.logger, app_state_machine.listing_page_index)
-        } else if msg == "open" && is_numb {
+        } else if verb == "open" && has_numb {
             open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
         }
     }
