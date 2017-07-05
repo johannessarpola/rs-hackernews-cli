@@ -12,7 +12,8 @@ use std::io::Write;
 use std::path::Path;
 
 use curl::easy::Easy;
-use utils::{parse_url_from_str, log_response_status};
+use logging_utils::log_response_status;
+use utils::{parse_url_from_str};
 use utils;
 use models::*;
 use endpoint::HnNewsEndpoint;
@@ -27,7 +28,7 @@ pub fn get_top_story_ids(app_domain: &mut AppDomain,
     state.current_state = AppStates::RetrievingResults;
     let work = request_top_story_ids(&client, &endpoint)
         .and_then(|res| {
-            log_response_status(&logger, &endpoint.get_top_stories_path(), &res.status());
+            log_response_status(&logger, &endpoint.get_top_stories_path(), &res.status().to_string());
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
                     v.extend(&chunk[..]);
@@ -60,7 +61,7 @@ pub fn get_item_by_id(item: &str,
     state.current_state = AppStates::RetrievingResults;
     let work = request_item(&item, &client, &endpoint)
         .and_then(|res| {
-            log_response_status(&logger, &endpoint.get_item_path(&item), &res.status());
+            log_response_status(&logger, &endpoint.get_item_path(&item), &res.status().to_string());
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
                     v.extend(&chunk[..]);

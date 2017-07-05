@@ -99,13 +99,11 @@ fn gui_listener(cmd: UiCommand,
         if msg == "next" {
             app_state_machine.listing_page_index += 1;
             print_ten_stories(app_domain, app_cache, app_state_machine);
-            info!(&app_domain.logger,
-                  format!("Retrieved next ten stories with index {}",
-                          &app_state_machine.listing_page_index))
+            logging_utils::log_stories_page_with_index(&app_domain.logger, app_state_machine.listing_page_index)
         } else if msg == "top" {
             print_ten_stories(app_domain, app_cache, app_state_machine);
         } else if msg == "exit" {
-            info!(&app_domain.logger, "Exited application normally");
+            logging_utils::log_exit(&app_domain.logger);
             process::exit(0);
         } else if msg == "comments" && is_numb  {
             load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
@@ -123,9 +121,7 @@ fn gui_listener(cmd: UiCommand,
                 app_state_machine.listing_page_index -= 1;
             }
             print_ten_stories(app_domain, app_cache, app_state_machine);
-            info!(&app_domain.logger,
-                  format!("Retrieved previous ten stories with index {}",
-                          &app_state_machine.listing_page_index));
+            logging_utils::log_stories_page_with_index(&app_domain.logger, app_state_machine.listing_page_index)
         } else if msg == "open" && is_numb {
             open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
         }
@@ -183,13 +179,11 @@ fn open_page_with_default_browser(numb: usize,
     let s = format!("{}",
                     app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
-    if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok() {
+    if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok() { // todo cleanup
         println!("{} {}",
-                 "Opened browser to url ",
-                 item.url.as_ref().unwrap());
-        info!(&app_domain.logger,
-              format!("Opened page with default browser from url {}",
-                      item.url.as_ref().unwrap()));
+                 "Opened browser to url",
+                 item.url.as_ref().unwrap()); // todo move to cli
+        logging_utils::log_open_page(&app_domain.logger, item.url.as_ref().unwrap())
     }
 }
 
@@ -204,8 +198,7 @@ fn load_page_to_local(numb: usize,
     match filen {
         Ok(n) => {
             cli::print_filename_of_loaded_page(&n, item.title.as_ref().unwrap());
-            info!(&app_domain.logger,
-                  format!("Loaded page {} to file {}", item.url.as_ref().unwrap(), &n));
+            logging_utils::log_loaded_page_locally(&app_domain.logger, item.url.as_ref().unwrap(), &n)
         }
         Err(e) => {
             cli::could_not_load_page(item.title.as_ref().unwrap());
@@ -222,8 +215,7 @@ fn print_ten_stories(app_domain: &mut AppDomain,
 
     // This probably should not need all the parameters
     let top_stories = app_cache.retrieved_top_stories.as_ref().unwrap();
-    info!(&app_domain.logger,
-          format!("Received {} top stories", top_stories.values.len()));
+    logging_utils::log_loaded_top_stories(&app_domain.logger, top_stories.values.len());
     let skipped: usize = (app_state_machine.listing_page_index * 10) as usize;
     let mut index = 0 + skipped as i32;
 

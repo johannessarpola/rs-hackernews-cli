@@ -89,11 +89,9 @@ impl slog_stream::Format for AppLogFormat {
               rinfo: &slog::Record,
               _logger_values: &slog::OwnedKeyValueList)
               -> io::Result<()> {
-        let msg = format!("{} {} from line {} in {}\n",
+        let msg = format!("{} - {}\n",
                           rinfo.level(),
-                          rinfo.msg(),
-                          rinfo.line(),
-                          rinfo.file());
+                          rinfo.msg());
         let _ = try!(io.write_all(msg.as_bytes()));
         Ok(())
     }
