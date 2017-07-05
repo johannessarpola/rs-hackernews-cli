@@ -20,13 +20,28 @@ pub fn parse_url_from_str(url_str: &str) -> Uri {
     url
 }
 
+pub fn try_to_parse_number(s: Option<&str>) -> Option<usize> {
+    match s {
+        Some(s) => {
+            let parse_result = s.parse::<usize>();
+            if parse_result.is_ok() {
+                Some(parse_result.unwrap())
+            } else {
+                None
+            }
+        }
+        None => None,
+    }
+}
+
 pub fn filename_for_hnitem(item: &HnItem) -> String {
     match item.title {
         Some(ref title) => return combine_strings(vec![&title, &item.by, ".html"]),
         None => {
-            return combine_strings(vec![
-                &parse_url_from_str(&item.url.as_ref().unwrap()).path().replace("/", "_")
-                ,".html"])
+            return combine_strings(vec![&parse_url_from_str(&item.url.as_ref().unwrap())
+                                            .path()
+                                            .replace("/", "_"),
+                                        ".html"])
         }
     }
 }

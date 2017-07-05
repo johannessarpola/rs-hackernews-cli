@@ -24,9 +24,11 @@ mod app;
 mod endpoint;
 mod cli;
 mod cli_colors;
+mod cli_backend;
 mod text_decoding;
 mod text_decoding_entities;
 mod text_decoding_io;
+mod logging_utils;
 
 use app::*;
 use models::*;
@@ -38,6 +40,7 @@ use std::thread::spawn;
 use std::process;
 use futures::{Stream, Sink, Future};
 use futures::sync::mpsc;
+use cli_backend::UiCommand;
 
 fn main() {
 
@@ -59,62 +62,73 @@ fn main() {
             sender.send(line).wait().unwrap();
         }
     });
-    let listener =
-        receiver.for_each(|msg| {
-            gui_listener(msg, &mut app_domain, &mut app_cache, &mut app_state_machine)
-        });
+    let listener = receiver.for_each(|msg| {
+        let optionCmd = UiCommand::parse(msg);
+        match optionCmd {
+            Some(cmd) => {
+                logging_utils::log_cmd(&app_domain.logger, &cmd);
+                gui_listener(cmd, &mut app_domain, &mut app_cache, &mut app_state_machine)
+            }
+            None => {
+                println!("Could not parse command");
+                Err(())
+            }
+        }
+
+    });
 
     let result = main_core.run(listener);
 }
 
-fn gui_listener(msg_result: Result<String, io::Error>,
+fn gui_listener(cmd: UiCommand,
                 app_domain: &mut AppDomain,
                 app_cache: &mut AppCache,
                 app_state_machine: &mut AppStateMachine)
                 -> Result<(), ()> {
-    // TODO Logging
-    let mut numb = 0;
-    match msg_result {
-        Ok(msg) => {
-            if msg.len() >= 4 && &msg[0..4] == "next" {
-                app_state_machine.listing_page_index += 1;
-                print_ten_stories(app_domain, app_cache, app_state_machine);
-                info!(&app_domain.logger,
-                      format!("Retrieved next ten stories with index {}",
-                              &app_state_machine.listing_page_index))
-            } else if msg.len() >= 3 && &msg[0..3] == "top" {
-                print_ten_stories(app_domain, app_cache, app_state_machine);
-            } else if msg.len() >= 4 && &msg[0..4] == "exit" {
-                info!(&app_domain.logger, "Exited application normally");
-                process::exit(0);
-            } else if msg.len() >= 8 && &msg[0..8] == "comments" {
-                numb = (msg[9..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
-                load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
-                cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
-                                              &app_cache.last_retrieved_comments);
-            } else if msg.len() >= 8 && &msg[0..6] == "expand" {
-                // todo handle non retreived comments
-                numb = (msg[7..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
-                load_comments_for_commment(numb, app_domain, app_cache, app_state_machine);
-                cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
-                                              &app_cache.last_retrieved_comments);
-            } else if msg.len() >= 4 && &msg[0..4] == "load" {
-                numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
-                load_page_to_local(numb, app_domain, app_cache, app_state_machine);
-            } else if msg.len() >= 4 && &msg[0..4] == "back" {
-                if app_state_machine.listing_page_index >= 0 {
-                    app_state_machine.listing_page_index -= 1;
-                }
-                print_ten_stories(app_domain, app_cache, app_state_machine);
-                info!(&app_domain.logger,
-                      format!("Retrieved previous ten stories with index {}",
-                              &app_state_machine.listing_page_index));
-            } else if msg.len() >= 4 && &msg[0..4] == "open" {
-                numb = (msg[5..].parse::<i32>().unwrap() - 1) as usize; // FIXME not handling errors either
-                open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
-            }
+
+    if (cmd.command.is_some()) {
+
+        let msg:String = cmd.command.unwrap();
+        let mut numb:usize = 0;
+        let mut is_numb = false;
+        if(cmd.number.is_some()) {
+            numb = cmd.number.unwrap();
+            is_numb = true;
         }
-        Err(_) => println!("{}", "Error"),
+
+        if msg == "next" {
+            app_state_machine.listing_page_index += 1;
+            print_ten_stories(app_domain, app_cache, app_state_machine);
+            info!(&app_domain.logger,
+                  format!("Retrieved next ten stories with index {}",
+                          &app_state_machine.listing_page_index))
+        } else if msg == "top" {
+            print_ten_stories(app_domain, app_cache, app_state_machine);
+        } else if msg == "exit" {
+            info!(&app_domain.logger, "Exited application normally");
+            process::exit(0);
+        } else if msg == "comments" && is_numb  {
+            load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
+            cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
+                                          &app_cache.last_retrieved_comments);
+        } else if msg == "expand" && is_numb {
+            // todo handle non retreived comments
+            load_comments_for_commment(numb, app_domain, app_cache, app_state_machine);
+            cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
+                                          &app_cache.last_retrieved_comments);
+        } else if msg == "load" && is_numb {
+            load_page_to_local(numb, app_domain, app_cache, app_state_machine);
+        } else if msg == "back" {
+            if app_state_machine.listing_page_index >= 0 {
+                app_state_machine.listing_page_index -= 1;
+            }
+            print_ten_stories(app_domain, app_cache, app_state_machine);
+            info!(&app_domain.logger,
+                  format!("Retrieved previous ten stories with index {}",
+                          &app_state_machine.listing_page_index));
+        } else if msg == "open" && is_numb {
+            open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
+        }
     }
     Ok(())
 }
