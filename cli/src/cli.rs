@@ -2,9 +2,6 @@ use models::*;
 use std::iter::repeat;
 use cli_colors;
 
-const fg: cli_colors::Foreground = cli_colors::Foreground;
-const bg: cli_colors::Background = cli_colors::Background;
-
 pub fn print_comment_and_parent(item: &Option<&HnItem>, comments: &Option<Vec<HnItem>>) {
     match *item {
         Some(ref item) => {
@@ -48,6 +45,8 @@ pub fn could_not_load_page(title: &str) {
 }
 
 pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
+    let coloring: cli_colors::CliColoring = cli_colors::CliColoring::new(cli_colors::Theme::Light); // todo, probably from app_domain
+
     if (comments.len() > 0) {
         match item.title {
             Some(ref title) => println!("Comments for item id {} with title {}", &item.id, title),
@@ -59,15 +58,11 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
             let res = create_comment_row(&comment_index, &comment);
             if res.is_some() {
                 if comment_index % 2 == 0 {
-                    bg.lgrey();
-                    fg.lwhite();
+                    coloring.zebra_coloring();
                 }
-                //if comment_index % 2 == 0 { fg.rgb(5,5,5); }
-                //else { fg.rgb(3,3,3); }
 
                 println!("{}", res.unwrap());
-                bg.reset();
-                fg.reset();
+                coloring.reset_colors();
             } else {
                 comment_index -= 1;
             }
