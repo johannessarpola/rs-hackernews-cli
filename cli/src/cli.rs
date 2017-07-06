@@ -76,7 +76,11 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
 fn create_comment_row(index: &i32, item: &HnItem) -> Option<String> {
     match item.text_unescaped() {
         Some(ref text) => {
-            let s = format!("[{:3}] {:80} ~{}", index, text, &item.by); // TODO This needs to handle unicode characters to utf8 or something similar (snap&#x27;s -> snap's)
+            let mut s = format!("[{:3}] {:80} ~{}", index, text, &item.by); // TODO This needs to handle unicode characters to utf8 or something similar (snap&#x27;s -> snap's)
+            match item.kids {
+                Some(ref kids) => s.push_str(&format!(" with [{:3}] replies", kids.len())),
+                None => ()
+            }
             Some(s)
         }
         None => None,

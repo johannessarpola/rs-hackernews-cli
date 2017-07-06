@@ -15,6 +15,13 @@ pub fn parse_url_from_str(url_str: &str) -> Uri {
     url
 }
 
+pub fn comment_has_kids(item: &HnItem) -> bool {
+    match item.kids {
+        Some(ref kids) => true,
+        None => false,
+    }
+}
+
 pub fn try_to_parse_number(s: Option<&str>) -> Option<usize> {
     match s {
         Some(s) => {

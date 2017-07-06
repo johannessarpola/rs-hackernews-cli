@@ -92,7 +92,7 @@ fn gui_listener(cmd: UiCommand,
         let mut numb:usize = 0;
         let mut has_numb = false;
         if(cmd.number.is_some()) {
-            numb = cmd.number.unwrap();
+            numb = cmd.number.unwrap() - 1; // UI is designed as index starting from 1
             has_numb = true;
         }
 
@@ -141,7 +141,7 @@ fn load_comments_for_commment(numb: usize,
                               app_domain: &mut AppDomain,
                               mut app_cache: &mut AppCache,
                               app_state_machine: &mut AppStateMachine) {
-    let item = app_cache.get_comment(numb);
+    let item = app_cache.get_comment_if_kids(numb);
     if item.is_some() {
         retrieve_comments_for_item(item.unwrap(), app_domain, app_cache, app_state_machine);
     }

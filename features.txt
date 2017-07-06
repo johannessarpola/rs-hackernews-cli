@@ -1,4 +1,3 @@
 Would-be cool
 - Parse the comments so that there's some rudimentary formatting based on the html tags like <p>...</p>
 - Get links in comment with a separate comment and remove the duplication (<a href="link">link</a>)
-- Show child comment count next to comment

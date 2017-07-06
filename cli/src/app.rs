@@ -11,6 +11,8 @@ use std::io;
 use models::{HnItem, HnListOfItems};
 use std::collections::VecDeque;
 
+use utils::comment_has_kids;
+
 ///
 /// 'AppDomain' struct which have relevant parts which are use as core elements of the application
 ///
@@ -41,10 +43,23 @@ impl AppCache {
             last_retrieved_comments: None,
         }
     }
-    pub fn get_comment(&mut self, numb:usize) ->  Option<HnItem> {
+    pub fn get_comment(&mut self, numb: usize) -> Option<HnItem> {
         match self.last_retrieved_comments {
             Some(ref mut comments) => Some(comments.remove(numb)),
-            None => None
+            None => None,
+        }
+    }
+
+    pub fn get_comment_if_kids(&mut self, numb: usize) -> Option<HnItem> {
+        match self.last_retrieved_comments {
+            Some(ref mut comments) => {
+                if comment_has_kids(&comments[numb]) {
+                    Some(comments.remove(numb))
+                } else {
+                    None
+                }
+            }
+            None => None,
         }
     }
 }
@@ -89,9 +104,7 @@ impl slog_stream::Format for AppLogFormat {
               rinfo: &slog::Record,
               _logger_values: &slog::OwnedKeyValueList)
               -> io::Result<()> {
-        let msg = format!("{} - {}\n",
-                          rinfo.level(),
-                          rinfo.msg());
+        let msg = format!("{} - {}\n", rinfo.level(), rinfo.msg());
         let _ = try!(io.write_all(msg.as_bytes()));
         Ok(())
     }

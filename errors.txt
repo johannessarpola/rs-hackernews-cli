@@ -5,3 +5,4 @@ note: Run with `RUST_BACKTRACE=1` for a backtrace.
 
 BUG: If there are no comments when calling 'expand' it pops the expanded comment and prints the same comments again
 BUG: Similar to above, if there are no comments for a story, "no comments" won't be printed
+SOLVED(?) BUG: thread "'main' panicked at 'assertion failed: index < len', src/libcollections/vec.rs:768" which is caused when trying to expand comment over the index
