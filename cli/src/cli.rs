@@ -73,6 +73,14 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
     println!("") // this adds extra space after comments and prevent the input being interfered with bg coloring
 }
 
+pub fn print_over_limit_but_using_index(numb:usize) {
+    println!("Over the limit, using index {}", numb);
+}
+
+pub fn print_could_not_get_story(numb:usize) {
+    println!("Could not get story at index {}", numb);
+}
+
 fn create_comment_row(index: &i32, item: &HnItem) -> Option<String> {
     match item.text_unescaped() {
         Some(ref text) => {

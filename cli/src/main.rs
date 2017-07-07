@@ -128,13 +128,35 @@ fn gui_listener(cmd: UiCommand,
     }
     Ok(())
 }
-
+fn check_numb_against_stories(numb:usize, app_cache: &mut AppCache) -> usize {
+    match app_cache.retrieved_top_stories {
+        Some(ref top_stories) => {
+            if(numb < app_cache.top_stories_len()) {
+                numb
+            }
+            else {
+                app_cache.top_stories_len() - 1
+            }
+        }
+        None => 0
+    }
+}
 fn load_comments_for_story(numb: usize,
                            app_domain: &mut AppDomain,
                            app_cache: &mut AppCache,
                            app_state_machine: &mut AppStateMachine) {
-    let parent = get_story(numb, app_domain, app_cache, app_state_machine).unwrap(); // FIXME No error handling
-    retrieve_comments_for_item(parent, app_domain, app_cache, app_state_machine)
+    let mut act_numb = check_numb_against_stories(numb, app_cache);
+    if(act_numb != numb) {
+        cli::print_over_limit_but_using_index(act_numb);
+    }
+    let parent_opt = get_story(act_numb, app_domain, app_cache, app_state_machine);
+    match parent_opt {
+        Some(parent) => {
+            retrieve_comments_for_item(parent, app_domain, app_cache, app_state_machine)
+        }
+        None => cli::print_could_not_get_story(act_numb +1)
+    }
+    
 }
 
 fn load_comments_for_commment(numb: usize,

@@ -62,6 +62,10 @@ impl AppCache {
             None => None,
         }
     }
+
+    pub fn top_stories_len(&self) -> usize {
+        self.retrieved_top_stories.as_ref().unwrap().values.len()
+    }
 }
 
 pub enum AppStates {
