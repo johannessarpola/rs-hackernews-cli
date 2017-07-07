@@ -34,6 +34,7 @@ use app::*;
 use models::*;
 use client::*;
 
+use std::cmp::min;
 use tokio_core::reactor::Core;
 use std::io::{self, BufRead};
 use std::thread::spawn;
@@ -88,10 +89,10 @@ fn gui_listener(cmd: UiCommand,
 
     if (cmd.command.is_some()) {
 
-        let verb:String = cmd.command.unwrap();
-        let mut numb:usize = 0;
+        let verb: String = cmd.command.unwrap();
+        let mut numb: usize = 0;
         let mut has_numb = false;
-        if(cmd.number.is_some()) {
+        if (cmd.number.is_some()) {
             numb = cmd.number.unwrap() - 1; // UI is designed as index starting from 1
             has_numb = true;
         }
@@ -99,13 +100,14 @@ fn gui_listener(cmd: UiCommand,
         if verb == "next" {
             app_state_machine.listing_page_index += 1;
             print_ten_stories(app_domain, app_cache, app_state_machine);
-            logging_utils::log_stories_page_with_index(&app_domain.logger, app_state_machine.listing_page_index)
+            logging_utils::log_stories_page_with_index(&app_domain.logger,
+                                                       app_state_machine.listing_page_index)
         } else if verb == "top" {
             print_ten_stories(app_domain, app_cache, app_state_machine);
         } else if verb == "exit" {
             logging_utils::log_exit(&app_domain.logger);
             process::exit(0);
-        } else if verb == "comments" && has_numb  {
+        } else if verb == "comments" && has_numb {
             load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
             cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
                                           &app_cache.last_retrieved_comments);
@@ -121,51 +123,79 @@ fn gui_listener(cmd: UiCommand,
                 app_state_machine.listing_page_index -= 1;
             }
             print_ten_stories(app_domain, app_cache, app_state_machine);
-            logging_utils::log_stories_page_with_index(&app_domain.logger, app_state_machine.listing_page_index)
+            logging_utils::log_stories_page_with_index(&app_domain.logger,
+                                                       app_state_machine.listing_page_index)
         } else if verb == "open" && has_numb {
             open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
         }
     }
     Ok(())
 }
-fn check_numb_against_stories(numb:usize, app_cache: &mut AppCache) -> usize {
+fn check_numb_against_stories(numb: usize, app_cache: &mut AppCache) -> Option<usize> {
     match app_cache.retrieved_top_stories {
         Some(ref top_stories) => {
-            if(numb < app_cache.top_stories_len()) {
-                numb
-            }
-            else {
-                app_cache.top_stories_len() - 1
+            match app_cache.stories_len() {
+                Some(l) => Some(min((l - 1), numb)),
+                None => None,
             }
         }
-        None => 0
+        None => None,
     }
 }
+
+fn check_numb_against_comments(numb: usize, app_cache: &mut AppCache) -> Option<usize> {
+    match app_cache.retrieved_top_stories {
+        Some(ref top_stories) => {
+            match app_cache.comments__len() {
+                Some(l) => Some(min((l - 1), numb)),
+                None => None,
+            }
+        }
+        None => None,
+    }
+}
+
 fn load_comments_for_story(numb: usize,
                            app_domain: &mut AppDomain,
                            app_cache: &mut AppCache,
                            app_state_machine: &mut AppStateMachine) {
-    let mut act_numb = check_numb_against_stories(numb, app_cache);
-    if(act_numb != numb) {
-        cli::print_over_limit_but_using_index(act_numb);
-    }
-    let parent_opt = get_story(act_numb, app_domain, app_cache, app_state_machine);
-    match parent_opt {
-        Some(parent) => {
-            retrieve_comments_for_item(parent, app_domain, app_cache, app_state_machine)
+    let opt_numb = check_numb_against_stories(numb, app_cache);
+    let mut act_numb = 0;
+    if opt_numb.is_none() {
+        cli::print_invalid_numb();
+    } else {
+        act_numb = opt_numb.unwrap();
+        if act_numb != numb {
+            cli::print_over_limit_but_using_index(act_numb +1);
         }
-        None => cli::print_could_not_get_story(act_numb +1)
+        let parent_opt = get_story(act_numb, app_domain, app_cache, app_state_machine);
+        match parent_opt {
+            Some(parent) => {
+                retrieve_comments_for_item(parent, app_domain, app_cache, app_state_machine)
+            }
+            None => cli::print_could_not_get_story(act_numb + 1),
+        }
     }
-    
 }
 
 fn load_comments_for_commment(numb: usize,
                               app_domain: &mut AppDomain,
                               mut app_cache: &mut AppCache,
                               app_state_machine: &mut AppStateMachine) {
-    let item = app_cache.get_comment_if_kids(numb);
-    if item.is_some() {
-        retrieve_comments_for_item(item.unwrap(), app_domain, app_cache, app_state_machine);
+
+    let opt_numb = check_numb_against_comments(numb, app_cache);
+    let mut act_numb = 0;
+    if opt_numb.is_none() {
+        cli::print_invalid_numb();
+    } else {
+        act_numb = opt_numb.unwrap();
+        if act_numb != numb {
+            cli::print_over_limit_but_using_index(act_numb +1);
+        }
+        let item = app_cache.get_comment_if_kids(act_numb);
+        if item.is_some() {
+            retrieve_comments_for_item(item.unwrap(), app_domain, app_cache, app_state_machine);
+        }
     }
 }
 
@@ -201,11 +231,10 @@ fn open_page_with_default_browser(numb: usize,
     let s = format!("{}",
                     app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
-    if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok() { // todo cleanup
-        println!("{} {}",
-                 "Opened browser to url",
-                 item.url.as_ref().unwrap()); // todo move to cli
-        logging_utils::log_open_page(&app_domain.logger, item.url.as_ref().unwrap())
+    if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok() {
+        // todo cleanup
+        logging_utils::log_open_page(&app_domain.logger, item.url.as_ref().unwrap());
+        println!("{} {}", "Opened browser to url", item.url.as_ref().unwrap()) // todo move to cli
     }
 }
 
@@ -220,7 +249,9 @@ fn load_page_to_local(numb: usize,
     match filen {
         Ok(n) => {
             cli::print_filename_of_loaded_page(&n, item.title.as_ref().unwrap());
-            logging_utils::log_loaded_page_locally(&app_domain.logger, item.url.as_ref().unwrap(), &n)
+            logging_utils::log_loaded_page_locally(&app_domain.logger,
+                                                   item.url.as_ref().unwrap(),
+                                                   &n)
         }
         Err(e) => {
             cli::could_not_load_page(item.title.as_ref().unwrap());

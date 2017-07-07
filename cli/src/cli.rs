@@ -73,6 +73,10 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
     println!("") // this adds extra space after comments and prevent the input being interfered with bg coloring
 }
 
+pub fn print_invalid_numb() {
+    println!("Received invalid number");
+}
+
 pub fn print_over_limit_but_using_index(numb:usize) {
     println!("Over the limit, using index {}", numb);
 }

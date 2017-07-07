@@ -63,8 +63,18 @@ impl AppCache {
         }
     }
 
-    pub fn top_stories_len(&self) -> usize {
-        self.retrieved_top_stories.as_ref().unwrap().values.len()
+    pub fn stories_len(&self) -> Option<usize> {
+        match self.retrieved_top_stories {
+            Some(ref top_stories) => Some(top_stories.values.len()),
+            None => None
+        }
+    }
+
+    pub fn comments__len(&self) -> Option<usize> {
+        match self.last_retrieved_comments {
+            Some(ref comments) =>  Some(comments.len()),
+            None => None
+        }
     }
 }
 
