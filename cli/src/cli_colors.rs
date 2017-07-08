@@ -36,7 +36,7 @@ impl CliColoring {
                 self.bg.rgb(1, 2, 4); // todo different themes
                 self.fg.rgb(1, 2, 2);
             }
-            Theme::Default => {
+            Theme::Disabled => {
                 // no theming
             }
         }
@@ -53,7 +53,7 @@ pub enum Theme {
     Light,
     Dark,
     Green,
-    Default,
+    Disabled,
 }
 
 impl Display for Theme {

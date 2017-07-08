@@ -45,7 +45,7 @@ pub fn could_not_load_page(title: &str) {
 }
 
 pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
-    let coloring: cli_colors::CliColoring = cli_colors::CliColoring::new(cli_colors::Theme::Default);  // todo, probably from app_domain
+    let coloring = cli_colors::CliColoring::new(cli_colors::Theme::Disabled);  // todo, probably from app_domain
 
     if (comments.len() > 0) {
         match item.title {
@@ -93,6 +93,7 @@ fn create_comment_row(index: &i32, item: &HnItem) -> Option<String> {
                 Some(ref kids) => s.push_str(&format!(" with [{:3}] replies", kids.len())),
                 None => ()
             }
+            s.push_str("\n-----");
             Some(s)
         }
         None => None,
