@@ -45,7 +45,7 @@ pub fn could_not_load_page(title: &str) {
 }
 
 pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
-    let coloring: cli_colors::CliColoring = cli_colors::CliColoring::new(cli_colors::Theme::Light); // todo, probably from app_domain
+    let coloring: cli_colors::CliColoring = cli_colors::CliColoring::new(cli_colors::Theme::Default);  // todo, probably from app_domain
 
     if (comments.len() > 0) {
         match item.title {

@@ -1,4 +1,6 @@
 use termion::{color, style};
+use std::fmt::{Debug, Display};
+use std::fmt;
 
 pub struct Foreground;
 pub struct Background;
@@ -20,19 +22,22 @@ impl CliColoring {
     }
 
     pub fn zebra_coloring(&self) {
+        // todo handle both rows so that there does not need to be module on cli.rs
         match self.theme {
-            ref Light => {
-                self.bg.lgrey();
-                self.fg.lwhite();
-            }
-            ref Dark => {
-                // todo
-                self.bg.lwhite();
+            Theme::Light => {
                 self.fg.lgrey();
+                self.bg.lwhite();
             }
-            ref Green => {
-                self.bg.rgb(5, 5, 5); // todo different themes
-                self.fg.rgb(1, 1, 1);
+            Theme::Dark => {
+                self.fg.lwhite();
+                self.bg.lgrey();
+            }
+            Theme::Green => {
+                self.bg.rgb(1, 2, 4); // todo different themes
+                self.fg.rgb(1, 2, 2);
+            }
+            Theme::Default => {
+                // no theming
             }
         }
     }
@@ -43,12 +48,19 @@ impl CliColoring {
     }
 }
 
+#[derive(Debug)]
 pub enum Theme {
     Light,
     Dark,
     Green,
+    Default,
 }
 
+impl Display for Theme {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 impl Background {
     pub fn lgrey(&self) {
