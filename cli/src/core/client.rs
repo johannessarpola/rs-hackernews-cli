@@ -207,7 +207,7 @@ mod tests {
     use hyper::StatusCode;
 
     use super::*;
-    use app::*;
+    use core::app::*;
 
     #[test]
     fn request_item_test() {
