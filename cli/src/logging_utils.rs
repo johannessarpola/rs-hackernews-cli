@@ -1,6 +1,9 @@
 use slog::Logger;
 use ui::backend::UiCommand;
 
+pub fn log_no_connection(logger: &Logger) {
+    warn!(logger, "No internet connection");
+}
 pub fn log_cmd(logger: &Logger, cmd: &UiCommand) {
     if cmd.number.is_some() {
         info!(logger,

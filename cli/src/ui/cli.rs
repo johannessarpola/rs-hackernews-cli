@@ -43,6 +43,10 @@ pub fn could_not_load_page(title: &str) {
     println!("Could not download to file with title {}", title);
 }
 
+pub fn print_no_connection() {
+    println!("Could not detect internet connection, please check it and try again");
+}
+
 pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
     let coloring = colors::CliColoring::new(colors::Theme::Disabled);  // todo, probably from app_domain
 
