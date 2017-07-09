@@ -1,6 +1,6 @@
-use models::*;
+use core::models::*;
 use std::iter::repeat;
-use cli_colors;
+use super::colors;
 
 pub fn print_comment_and_parent(item: &Option<&HnItem>, comments: &Option<Vec<HnItem>>) {
     match *item {
@@ -45,7 +45,7 @@ pub fn could_not_load_page(title: &str) {
 }
 
 pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
-    let coloring = cli_colors::CliColoring::new(cli_colors::Theme::Disabled);  // todo, probably from app_domain
+    let coloring = colors::CliColoring::new(colors::Theme::Disabled);  // todo, probably from app_domain
 
     if (comments.len() > 0) {
         match item.title {

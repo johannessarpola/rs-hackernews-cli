@@ -15,9 +15,9 @@ use curl::easy::Easy;
 use logging_utils::log_response_status;
 use utils::{parse_url_from_str};
 use utils;
-use models::*;
-use endpoint::HnNewsEndpoint;
-use app::{AppDomain, AppStates, AppStateMachine};
+use super::models::*;
+use super::endpoint::HnNewsEndpoint;
+use super::app::{AppDomain, AppStates, AppStateMachine};
 
 pub fn get_top_story_ids(app_domain: &mut AppDomain,
                          state: &mut AppStateMachine)

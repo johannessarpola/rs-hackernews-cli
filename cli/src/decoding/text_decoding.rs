@@ -2,8 +2,8 @@ use std::io::{self, Write, BufRead, Cursor};
 use std::char;
 use self::DecodeState::*;
 use self::DecodeErrKind::*;
-use text_decoding_io::{self, write_char, CharsError};
-use text_decoding_entities::*;
+use super::text_decoding_io::{self, write_char, CharsError};
+use super::text_decoding_entities::*;
 
 /**
 original: https://github.com/veddan/rust-htmlescape/

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Deserializer};
 use serde_json;
-use text_decoding::decode_html;
+use decoding::text_decoding::decode_html;
 
 #[derive(Serialize)]
 pub struct HnListOfItems {

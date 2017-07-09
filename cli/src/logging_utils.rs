@@ -1,5 +1,5 @@
 use slog::Logger;
-use cli_backend::UiCommand;
+use ui::backend::UiCommand;
 
 pub fn log_cmd(logger: &Logger, cmd: &UiCommand) {
     if cmd.number.is_some() {

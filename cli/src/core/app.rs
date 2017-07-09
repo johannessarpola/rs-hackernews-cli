@@ -1,16 +1,15 @@
 use tokio_core::reactor::{Core, Handle};
 use hyper::Client;
 use hyper_tls::HttpsConnector;
-use endpoint::HnNewsEndpoint;
 use slog;
 use slog_term;
 use slog_stream;
 use slog::{Level, LevelFilter, DrainExt};
 use std::fs::OpenOptions;
 use std::io;
-use models::{HnItem, HnListOfItems};
 use std::collections::VecDeque;
-
+use super::endpoint::HnNewsEndpoint;
+use super::models::{HnItem, HnListOfItems};
 use utils::comment_has_kids;
 
 ///

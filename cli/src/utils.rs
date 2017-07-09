@@ -1,6 +1,6 @@
 use hyper::{Uri, StatusCode};
 use slog::*;
-use models::HnItem;
+use core::models::HnItem;
 
 pub fn combine_strings(strings: Vec<&str>) -> String {
     let combine = strings.join("");

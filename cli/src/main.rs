@@ -18,21 +18,16 @@ extern crate webbrowser;
 extern crate termion;
 
 mod utils;
-mod models;
-mod client;
-mod app;
-mod endpoint;
-mod cli;
-mod cli_colors;
-mod cli_backend;
-mod text_decoding;
-mod text_decoding_entities;
-mod text_decoding_io;
+mod ui;
+mod decoding;
 mod logging_utils;
+mod formatting;
+mod core;
 
-use app::*;
-use models::*;
-use client::*;
+use core::app::*;
+use core::models::*;
+use core::client;
+use ui::cli;
 
 use std::cmp::min;
 use tokio_core::reactor::Core;
@@ -41,7 +36,7 @@ use std::thread::spawn;
 use std::process;
 use futures::{Stream, Sink, Future};
 use futures::sync::mpsc;
-use cli_backend::UiCommand;
+use ui::backend::UiCommand;
 
 fn main() {
 
@@ -51,7 +46,7 @@ fn main() {
     let mut main_core = Core::new().expect("Failed to create core");
 
     info!(&app_domain.logger, "Application started");
-    app_cache.retrieved_top_stories = get_top_story_ids(&mut app_domain, &mut app_state_machine)
+    app_cache.retrieved_top_stories = client::get_top_story_ids(&mut app_domain, &mut app_state_machine)
         .ok();
     print_ten_stories(&mut app_domain, &mut app_cache, &mut app_state_machine);
     let (sender, receiver) = mpsc::channel(1);
