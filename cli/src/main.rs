@@ -46,8 +46,8 @@ fn main() {
     let mut main_core = Core::new().expect("Failed to create core");
 
     info!(&app_domain.logger, "Application started");
-    app_cache.retrieved_top_stories = client::get_top_story_ids(&mut app_domain, &mut app_state_machine)
-        .ok();
+    app_cache.retrieved_top_stories =
+        client::get_top_story_ids(&mut app_domain, &mut app_state_machine).ok();
     print_ten_stories(&mut app_domain, &mut app_cache, &mut app_state_machine);
     let (sender, receiver) = mpsc::channel(1);
 
@@ -59,8 +59,8 @@ fn main() {
         }
     });
     let listener = receiver.for_each(|verb| {
-        let optionCmd = UiCommand::parse(verb);
-        match optionCmd {
+        let option_cmd = UiCommand::parse(verb);
+        match option_cmd {
             Some(cmd) => {
                 logging_utils::log_cmd(&app_domain.logger, &cmd);
                 gui_listener(cmd, &mut app_domain, &mut app_cache, &mut app_state_machine)
@@ -82,12 +82,12 @@ fn gui_listener(cmd: UiCommand,
                 app_state_machine: &mut AppStateMachine)
                 -> Result<(), ()> {
 
-    if (cmd.command.is_some()) {
+    if cmd.command.is_some() {
 
         let verb: String = cmd.command.unwrap();
         let mut numb: usize = 0;
         let mut has_numb = false;
-        if (cmd.number.is_some()) {
+        if cmd.number.is_some() {
             numb = cmd.number.unwrap() - 1; // UI is designed as index starting from 1
             has_numb = true;
         }
@@ -127,25 +127,15 @@ fn gui_listener(cmd: UiCommand,
     Ok(())
 }
 fn check_numb_against_stories(numb: usize, app_cache: &mut AppCache) -> Option<usize> {
-    match app_cache.retrieved_top_stories {
-        Some(ref top_stories) => {
-            match app_cache.stories_len() {
-                Some(l) => Some(min((l - 1), numb)),
-                None => None,
-            }
-        }
+    match app_cache.stories_len() {
+        Some(l) => Some(min((l - 1), numb)),
         None => None,
     }
 }
 
 fn check_numb_against_comments(numb: usize, app_cache: &mut AppCache) -> Option<usize> {
-    match app_cache.retrieved_top_stories {
-        Some(ref top_stories) => {
-            match app_cache.comments__len() {
-                Some(l) => Some(min((l - 1), numb)),
-                None => None,
-            }
-        }
+    match app_cache.comments_len() {
+        Some(l) => Some(min((l - 1), numb)),
         None => None,
     }
 }
@@ -155,13 +145,12 @@ fn load_comments_for_story(numb: usize,
                            app_cache: &mut AppCache,
                            app_state_machine: &mut AppStateMachine) {
     let opt_numb = check_numb_against_stories(numb, app_cache);
-    let mut act_numb = 0;
     if opt_numb.is_none() {
         cli::print_invalid_numb();
     } else {
-        act_numb = opt_numb.unwrap();
+        let act_numb = opt_numb.unwrap();
         if act_numb != numb {
-            cli::print_over_limit_but_using_index(act_numb +1);
+            cli::print_over_limit_but_using_index(act_numb + 1);
         }
         let parent_opt = get_story(act_numb, app_domain, app_cache, app_state_machine);
         match parent_opt {
@@ -179,13 +168,12 @@ fn load_comments_for_commment(numb: usize,
                               app_state_machine: &mut AppStateMachine) {
 
     let opt_numb = check_numb_against_comments(numb, app_cache);
-    let mut act_numb = 0;
     if opt_numb.is_none() {
         cli::print_invalid_numb();
     } else {
-        act_numb = opt_numb.unwrap();
+        let act_numb = opt_numb.unwrap();
         if act_numb != numb {
-            cli::print_over_limit_but_using_index(act_numb +1);
+            cli::print_over_limit_but_using_index(act_numb + 1);
         }
         let item = app_cache.get_comment_if_kids(act_numb);
         if item.is_some() {

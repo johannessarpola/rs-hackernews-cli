@@ -1,14 +1,11 @@
-use hyper::{Uri, StatusCode};
-use slog::*;
+use hyper::{Uri};
 use core::models::HnItem;
 
 pub fn combine_strings(strings: Vec<&str>) -> String {
     let combine = strings.join("");
     combine
 }
-pub fn rand_string(length: i32) -> String {
-    String::from("abc") // TODO Implement
-}
+
 pub fn parse_url_from_str(url_str: &str) -> Uri {
     let url_str = String::from(url_str);
     let url = url_str.parse::<Uri>().unwrap();
@@ -17,7 +14,7 @@ pub fn parse_url_from_str(url_str: &str) -> Uri {
 
 pub fn comment_has_kids(item: &HnItem) -> bool {
     match item.kids {
-        Some(ref kids) => true,
+        Some(_) => true,
         None => false,
     }
 }

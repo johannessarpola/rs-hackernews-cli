@@ -69,7 +69,7 @@ impl AppCache {
         }
     }
 
-    pub fn comments__len(&self) -> Option<usize> {
+    pub fn comments_len(&self) -> Option<usize> {
         match self.last_retrieved_comments {
             Some(ref comments) =>  Some(comments.len()),
             None => None

@@ -12,8 +12,8 @@ use std::io::Write;
 use std::path::Path;
 
 use curl::easy::Easy;
-use logging_utils::log_response_status;
-use utils::{parse_url_from_str};
+use logging_utils::{log_response_status, log_written_file};
+use utils::parse_url_from_str;
 use utils;
 use super::models::*;
 use super::endpoint::HnNewsEndpoint;
@@ -28,7 +28,9 @@ pub fn get_top_story_ids(app_domain: &mut AppDomain,
     state.current_state = AppStates::RetrievingResults;
     let work = request_top_story_ids(&client, &endpoint)
         .and_then(|res| {
-            log_response_status(&logger, &endpoint.get_top_stories_path(), &res.status().to_string());
+            log_response_status(&logger,
+                                &endpoint.get_top_stories_path(),
+                                &res.status().to_string());
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
                     v.extend(&chunk[..]);
@@ -61,7 +63,9 @@ pub fn get_item_by_id(item: &str,
     state.current_state = AppStates::RetrievingResults;
     let work = request_item(&item, &client, &endpoint)
         .and_then(|res| {
-            log_response_status(&logger, &endpoint.get_item_path(&item), &res.status().to_string());
+            log_response_status(&logger,
+                                &endpoint.get_item_path(&item),
+                                &res.status().to_string());
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
                     v.extend(&chunk[..]);
@@ -75,9 +79,9 @@ pub fn get_item_by_id(item: &str,
 }
 
 pub fn get_comments_for_item(item: &HnItem,
-                         app_domain: &mut AppDomain,
-                         state: &mut AppStateMachine)
-                         -> Option<Vec<HnItem>> {
+                             app_domain: &mut AppDomain,
+                             state: &mut AppStateMachine)
+                             -> Option<Vec<HnItem>> {
     match item.kids {
         Some(ref kids) => {
             let core = &mut app_domain.core;
@@ -95,7 +99,7 @@ pub fn get_comments_for_item(item: &HnItem,
                 .map(|item_id| {
                     (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint))
                 })
-                .map(|(item_id, request_work)| {
+                .map(|(_, request_work)| {
                     let subtask = request_work.and_then(|response| {
                         response.body()
                             .fold(Vec::new(), |mut v, chunk| {
@@ -148,16 +152,22 @@ pub fn download_page_from_item(item: &HnItem,
     match item.url {
         // todo change to async
         Some(ref url) => {
-            let uri = utils::parse_url_from_str(url);
             let filename: String = utils::filename_for_hnitem(&item);
             let path = Path::new(&filename);
             let mut file: File =
                 OpenOptions::new().write(true).create(true).open(path.as_os_str()).unwrap();
+            
+            state.current_state = AppStates::RetrievingResults;
+            let page_content = curl_req(url);
 
-            let v = curl_req(url);
-            let s = String::from_utf8(v).unwrap(); // TODO errors
-            file.write_all(s.as_bytes());
+            state.current_state = AppStates::DoingLocalWork;   
+            let page_as_string = String::from_utf8(page_content).unwrap(); // TODO errors
+
+            let write_result = file.write_all(page_as_string.as_bytes());
+            log_written_file(&app_domain.logger, write_result.is_ok(), &filename);
+
             Ok(String::from(path.as_os_str().to_str().unwrap())) // should probably be path to string
+            // todo error if could not create
         }
         None => Err(String::from("No url")),
     }
@@ -194,7 +204,7 @@ fn common_headers(req: &mut Request) {
 
 #[cfg(test)]
 mod tests {
-    use hyper::{StatusCode};
+    use hyper::StatusCode;
 
     use super::*;
     use app::*;

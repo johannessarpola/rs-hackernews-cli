@@ -13,6 +13,16 @@ pub fn log_cmd(logger: &Logger, cmd: &UiCommand) {
     }
 }
 
+pub fn log_written_file(logger: &Logger, success:bool, filename:&str) {
+        if success {             
+            info!(logger, format!("Written file with name {}", filename));
+        }
+        else {
+            warn!(logger, format!("Failed to write file with name {}", filename));
+        }
+}
+
+
 pub fn log_stories_page_with_index(logger: &Logger, index: i32) {
     info!(logger,
           format!("Retrieved previous stories page with index {}", index));

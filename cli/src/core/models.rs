@@ -51,7 +51,7 @@ pub struct HnItemCommentMap {
 
 impl HnItem {
     pub fn text_unescaped(&self) -> Option<String> {
-        if (self.text.is_some()) {
+        if self.text.is_some() {
             let unescaped = decode_html(self.text.as_ref().unwrap());
             if unescaped.is_ok() {
                 let unwrapped = unescaped.unwrap();

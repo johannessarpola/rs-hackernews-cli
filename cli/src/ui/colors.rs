@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 use termion::{color, style};
 use std::fmt::{Debug, Display};
 use std::fmt;
@@ -47,7 +49,6 @@ impl CliColoring {
         self.fg.reset();
     }
 }
-
 #[derive(Debug)]
 pub enum Theme {
     Light,

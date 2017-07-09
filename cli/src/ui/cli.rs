@@ -1,5 +1,4 @@
 use core::models::*;
-use std::iter::repeat;
 use super::colors;
 
 pub fn print_comment_and_parent(item: &Option<&HnItem>, comments: &Option<Vec<HnItem>>) {
@@ -47,7 +46,7 @@ pub fn could_not_load_page(title: &str) {
 pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
     let coloring = colors::CliColoring::new(colors::Theme::Disabled);  // todo, probably from app_domain
 
-    if (comments.len() > 0) {
+    if comments.len() > 0 {
         match item.title {
             Some(ref title) => println!("Comments for item id {} with title {}", &item.id, title),
             None => println!("Comments for item id {}", &item.id),
