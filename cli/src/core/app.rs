@@ -5,14 +5,9 @@ use std::sync::Arc;
 use std::fs::OpenOptions;
 use std::collections::VecDeque;
 
-use futures::future::{err, Future};
-use futures::stream::Stream;
 use hyper::client::HttpConnector;
-use hyper::{Client, Request, Method, Uri};
+use hyper::{Client};
 use native_tls::TlsConnector;
-use tokio_core::net::TcpStream;
-use tokio_service::Service;
-use tokio_tls::{TlsConnectorExt, TlsStream};
 
 use slog;
 use slog_term;

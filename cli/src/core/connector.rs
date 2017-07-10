@@ -2,9 +2,8 @@ use std::io;
 use std::sync::Arc;
 
 use futures::future::{err, Future};
-use futures::stream::Stream;
 use hyper::client::HttpConnector;
-use hyper::{Client, Request, Method, Uri};
+use hyper::{Uri};
 use native_tls::TlsConnector;
 use tokio_core::net::TcpStream;
 use tokio_service::Service;
