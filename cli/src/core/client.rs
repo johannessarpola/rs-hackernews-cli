@@ -5,7 +5,7 @@ use core::connector::HttpsConnector;
 use futures::{Future, Stream};
 use futures::future;
 use serde_json;
-use serde::Deserialize;
+use serde::de::DeserializeOwned;
 
 use std::fs::{File, OpenOptions}; // TODO file writing to utils.rs
 use std::io::Write;
@@ -43,7 +43,7 @@ pub fn get_top_story_ids(app_domain: &mut AppDomain,
     result
 }
 
-fn deserialize<T: Deserialize>(chunks: Vec<u8>) -> T {
+fn deserialize<T: DeserializeOwned>(chunks: Vec<u8>) -> T {
     let s = String::from_utf8(chunks).unwrap();
     let deserialized: T = serde_json::from_str(&s).unwrap();
     deserialized

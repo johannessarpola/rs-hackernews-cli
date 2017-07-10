@@ -7,9 +7,9 @@ pub struct HnListOfItems {
     pub values: Vec<i32>,
 }
 
-impl Deserialize for HnListOfItems {
+impl<'de> Deserialize<'de> for HnListOfItems {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer
+        where D: Deserializer<'de>
     {
         Deserialize::deserialize(deserializer).map(|arr: Vec<i32>| HnListOfItems { values: arr })
     }
