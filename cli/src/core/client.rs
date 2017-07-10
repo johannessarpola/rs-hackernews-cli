@@ -1,7 +1,8 @@
 use hyper::{Uri, Client, Method, Error};
 use hyper::header::UserAgent;
 use hyper::client::{Request, FutureResponse};
-use hyper_tls::HttpsConnector;
+use core::connector::HttpsConnector;
+use native_tls::TlsConnector;
 use futures::{Future, Stream};
 use futures::future;
 use serde_json;

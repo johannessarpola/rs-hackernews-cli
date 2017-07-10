@@ -1,15 +1,26 @@
 use tokio_core::reactor::{Core, Handle};
-use hyper::Client;
-use hyper_tls::HttpsConnector;
+
+use std::io;
+use std::sync::Arc;
+use std::fs::OpenOptions;
+use std::collections::VecDeque;
+
+use futures::future::{err, Future};
+use futures::stream::Stream;
+use hyper::client::HttpConnector;
+use hyper::{Client, Request, Method, Uri};
+use native_tls::TlsConnector;
+use tokio_core::net::TcpStream;
+use tokio_service::Service;
+use tokio_tls::{TlsConnectorExt, TlsStream};
+
 use slog;
 use slog_term;
 use slog_stream;
 use slog::{Level, LevelFilter, DrainExt};
-use std::fs::OpenOptions;
-use std::io;
-use std::collections::VecDeque;
 use super::endpoint::HnNewsEndpoint;
 use super::models::{HnItem, HnListOfItems};
+use super::connector::HttpsConnector;
 use utils::comment_has_kids;
 
 ///
@@ -65,14 +76,14 @@ impl AppCache {
     pub fn stories_len(&self) -> Option<usize> {
         match self.retrieved_top_stories {
             Some(ref top_stories) => Some(top_stories.values.len()),
-            None => None
+            None => None,
         }
     }
 
     pub fn comments_len(&self) -> Option<usize> {
         match self.last_retrieved_comments {
-            Some(ref comments) =>  Some(comments.len()),
-            None => None
+            Some(ref comments) => Some(comments.len()),
+            None => None,
         }
     }
 }
@@ -124,10 +135,17 @@ impl slog_stream::Format for AppLogFormat {
 }
 
 fn configure_client(handle: &Handle) -> Client<HttpsConnector> {
+    let tls_cx = TlsConnector::builder().unwrap().build().unwrap();
+    let mut connector = HttpsConnector {
+        tls: Arc::new(tls_cx),
+        http: HttpConnector::new(2, handle),
+    };
+    connector.disable_enforce_http();
     Client::configure()
             // Does not check the validity of certificate
-            .connector(HttpsConnector::new(4, &handle))
-            .build(&handle)
+            .connector(connector)
+            .build(handle)
+
 }
 impl AppDomain {
     pub fn new() -> AppDomain {
@@ -163,5 +181,3 @@ fn create_loggers() -> slog::Logger {
                            o!());
     logger
 }
-
-// todo some tests
