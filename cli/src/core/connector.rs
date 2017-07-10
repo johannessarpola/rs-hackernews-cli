@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use futures::future::{err, Future};
 use hyper::client::HttpConnector;
-use hyper::{Uri};
+use hyper::Uri;
 use native_tls::TlsConnector;
 use tokio_core::net::TcpStream;
 use tokio_service::Service;
@@ -33,18 +33,14 @@ impl Service for HttpsConnector {
         // some clients resolve to TLS streams (https) and others resolve
         // to normal TCP streams (http)
         if uri.scheme() != Some("https") {
-            return err(io::Error::new(io::ErrorKind::Other,
-                                      "only works with https")).boxed()
+            return err(io::Error::new(io::ErrorKind::Other, "only works with https")).boxed();
         }
 
         // Look up the host that we're connecting to as we're going to validate
         // this as part of the TLS handshake.
         let host = match uri.host() {
             Some(s) => s.to_string(),
-            None =>  {
-                return err(io::Error::new(io::ErrorKind::Other,
-                                          "missing host")).boxed()
-            }
+            None => return err(io::Error::new(io::ErrorKind::Other, "missing host")).boxed(),
         };
 
         // Delegate to the standard `HttpConnector` type to create a connected
@@ -56,4 +52,61 @@ impl Service for HttpsConnector {
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))
         }))
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hyper::{Client, Request, Method, StatusCode};
+    use tokio_core::reactor::{Core, Handle};
+    use hyper::client::HttpConnector;
+    use native_tls::TlsConnector;
+    use std::sync::Arc;
+
+    #[test]
+    fn test_valid_cert() {
+        let mut core = Core::new().unwrap();
+
+        let tls_cx = TlsConnector::builder().unwrap().build().unwrap();
+        let mut connector = HttpsConnector {
+            tls: Arc::new(tls_cx),
+            http: HttpConnector::new(4, &core.handle()),
+        };
+        connector.disable_enforce_http();
+
+        let client = Client::configure()
+            .connector(connector)
+            .build(&core.handle());
+
+
+        let uri = "https://www.rust-lang.org/".parse().unwrap();
+        let req = Request::new(Method::Get, uri);
+        let response = core.run(client.request(req)).unwrap();
+        assert_eq!(StatusCode::Ok, response.status());
+    }
+
+    #[test]
+    fn test_invalid_cert() {
+        let mut core = Core::new().unwrap();
+
+
+        let tls_cx = TlsConnector::builder().unwrap().build().unwrap();
+        let mut connector = HttpsConnector {
+            tls: Arc::new(tls_cx),
+            http: HttpConnector::new(4, &core.handle()),
+        };
+        connector.disable_enforce_http();
+
+        let client = Client::configure()
+            .connector(connector)
+            .build(&core.handle());
+
+
+        let uri = "https://untrusted-root.badssl.com/".parse().unwrap();
+        let req = Request::new(Method::Get, uri);
+        assert!(core.run(client.request(req)).is_err());
+
+    }
+
+
 }

@@ -1,5 +1,3 @@
-use tokio_core::reactor::{Core, Handle};
-
 use std::io;
 use std::sync::Arc;
 use std::fs::OpenOptions;
@@ -8,6 +6,7 @@ use std::collections::VecDeque;
 use hyper::client::HttpConnector;
 use hyper::{Client};
 use native_tls::TlsConnector;
+use tokio_core::reactor::{Core, Handle};
 
 use slog;
 use slog_term;
@@ -133,15 +132,15 @@ fn configure_client(handle: &Handle) -> Client<HttpsConnector> {
     let tls_cx = TlsConnector::builder().unwrap().build().unwrap();
     let mut connector = HttpsConnector {
         tls: Arc::new(tls_cx),
-        http: HttpConnector::new(2, handle),
+        http: HttpConnector::new(4, handle),
     };
     connector.disable_enforce_http();
     Client::configure()
-            // Does not check the validity of certificate
             .connector(connector)
             .build(handle)
 
 }
+
 impl AppDomain {
     pub fn new() -> AppDomain {
         let logger = create_loggers();
