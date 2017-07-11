@@ -143,7 +143,4 @@ mod tests {
         assert!(commentStr.contains("cholantesh"));
 
     }
-
-    #[test]
-    fn test_cli_color() {}
 }
