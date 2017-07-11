@@ -13,7 +13,6 @@ extern crate hyper;
 extern crate tokio_core;
 extern crate tokio_tls;
 extern crate tokio_service;
-extern crate time;
 extern crate curl;
 extern crate webbrowser;
 extern crate termion;
