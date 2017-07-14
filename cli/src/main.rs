@@ -17,6 +17,7 @@ extern crate curl;
 extern crate webbrowser;
 extern crate termion;
 extern crate native_tls;
+extern crate regex;
 
 mod utils;
 mod ui;

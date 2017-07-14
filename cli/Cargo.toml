@@ -22,6 +22,7 @@ slog-stream = "*"
 curl = "0.4.6"
 webbrowser = "0.2.2"
 termion = "*"
+regex = "^0.2"
 
 [dev-dependencies]
 
