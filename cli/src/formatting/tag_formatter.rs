@@ -1,11 +1,13 @@
 use regex::Regex;
-use super::formatter::Formatter;
+use super::formatter::FormatStr;
 
 pub struct TagFormatter;
 
-impl Formatter for TagFormatter {
-    fn format(s: &str) -> String {
-        String::from("s")
+impl FormatStr for TagFormatter {
+    fn format(&self, s: &str) -> String {
+        let r = self.format_paragraphs(s);
+        // currently no special formatting for links so just format like other tags (remove)
+        self.format_tags(&r)
     }
 }
 

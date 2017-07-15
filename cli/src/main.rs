@@ -107,12 +107,14 @@ fn gui_listener(cmd: UiCommand,
         } else if verb == "comments" && has_numb {
             load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
             cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
-                                          &app_cache.last_retrieved_comments);
+                                          &app_cache.last_retrieved_comments,
+                                          &app_domain.formatters);
         } else if verb == "expand" && has_numb {
             // todo handle non retreived comments
             load_comments_for_commment(numb, app_domain, app_cache, app_state_machine);
             cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
-                                          &app_cache.last_retrieved_comments);
+                                          &app_cache.last_retrieved_comments,
+                                          &app_domain.formatters);
         } else if verb == "load" && has_numb {
             load_page_to_local(numb, app_domain, app_cache, app_state_machine);
         } else if verb == "back" {

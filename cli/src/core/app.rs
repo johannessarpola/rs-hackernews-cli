@@ -16,6 +16,7 @@ use super::endpoint::HnNewsEndpoint;
 use super::models::{HnItem, HnListOfItems};
 use super::connector::HttpsConnector;
 use utils::comment_has_kids;
+use formatting::formatter::Formatters;
 
 ///
 /// 'AppDomain' struct which have relevant parts which are use as core elements of the application
@@ -25,6 +26,25 @@ pub struct AppDomain {
     pub endpoint: HnNewsEndpoint,
     pub client: Client<HttpsConnector>,
     pub logger: slog::Logger,
+    pub formatters: Formatters,
+}
+
+impl AppDomain {
+    pub fn new() -> AppDomain {
+        let logger = create_loggers();
+        let core = Core::new().expect("Failed to create core");
+        let handle = core.handle();
+        let client = configure_client(&handle);
+        let endpoint = HnNewsEndpoint::build_default();
+        let formatters = Formatters::new();
+        AppDomain {
+            core: core,
+            endpoint: endpoint,
+            client: client,
+            logger: logger,
+            formatters: formatters,
+        }
+    }
 }
 
 pub struct AppCache {
@@ -139,22 +159,6 @@ fn configure_client(handle: &Handle) -> Client<HttpsConnector> {
             .connector(connector)
             .build(handle)
 
-}
-
-impl AppDomain {
-    pub fn new() -> AppDomain {
-        let logger = create_loggers();
-        let core = Core::new().expect("Failed to create core");
-        let handle = core.handle();
-        let client = configure_client(&handle);
-        let endpoint = HnNewsEndpoint::build_default();
-        AppDomain {
-            core: core,
-            endpoint: endpoint,
-            client: client,
-            logger: logger,
-        }
-    }
 }
 
 fn create_loggers() -> slog::Logger {

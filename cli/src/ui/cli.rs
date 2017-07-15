@@ -1,11 +1,12 @@
 use core::models::*;
 use super::colors;
+use formatting::formatter::FormatStr;
 
-pub fn print_comment_and_parent(item: &Option<&HnItem>, comments: &Option<Vec<HnItem>>) {
+pub fn print_comment_and_parent(item: &Option<&HnItem>, comments: &Option<Vec<HnItem>>, format: &FormatStr) {
     match *item {
         Some(ref item) => {
             match *comments {
-                Some(ref comments) => print_comments(item, comments),
+                Some(ref comments) => print_comments(item, comments, format),
                 None => could_not_get_any_commments_for_item(item), 
             }
         }
@@ -47,7 +48,7 @@ pub fn print_no_connection() {
     println!("Could not detect internet connection, please check it and try again");
 }
 
-pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
+pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>, format: &FormatStr) {
     let coloring = colors::CliColoring::new(colors::Theme::Disabled);  // todo, probably from app_domain
 
     if comments.len() > 0 {
@@ -58,7 +59,7 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>) {
         let mut comment_index = 0;
         for comment in comments {
             comment_index += 1;
-            let res = create_comment_row(&comment_index, &comment);
+            let res = create_comment_row(&comment_index, &comment, format);
             if res.is_some() {
                 if comment_index % 2 == 0 {
                     coloring.zebra_coloring();
@@ -88,10 +89,10 @@ pub fn print_could_not_get_story(numb:usize) {
     println!("Could not get story at index {}", numb);
 }
 
-fn create_comment_row(index: &i32, item: &HnItem) -> Option<String> {
+fn create_comment_row(index: &i32, item: &HnItem, format: &FormatStr) -> Option<String> {
     match item.text_unescaped() {
         Some(ref text) => {
-            let mut s = format!("[{:3}] {:80} ~{}", index, text, &item.by); // TODO This needs to handle unicode characters to utf8 or something similar (snap&#x27;s -> snap's)
+            let mut s = format!("[{:3}] {:80} ~{}", index, &format.format(text), &item.by);
             match item.kids {
                 Some(ref kids) => s.push_str(&format!(" with [{:3}] replies", kids.len())),
                 None => ()
@@ -133,12 +134,15 @@ mod tests {
         use std::fs::File;
         use std::io::prelude::*;
         use serde_json;
+        use formatting::formatter::Formatters;
+
         let mut contents = String::new();
+        let formatting = Formatters::new();
         File::open("res/test/children-item.json")
             .and_then(|mut file| file.read_to_string(&mut contents))
             .unwrap();
         let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
-        let commentStr = create_comment_row(&1, &deserialized).unwrap();
+        let commentStr = create_comment_row(&1, &deserialized, &formatting).unwrap();
         assert!(commentStr.contains("is not a valid concern. Unless you are planning"));
         assert!(commentStr.contains("cholantesh"));
 
