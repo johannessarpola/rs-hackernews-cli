@@ -41,6 +41,8 @@ pub struct HnItem {
     pub type_str: String,
     #[serde(skip_serializing_if="Option::is_none")]
     pub url: Option<String>,
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub dead: Option<bool>,
 }
 
 pub struct HnItemCommentMap {
@@ -55,7 +57,7 @@ impl HnItem {
             let unescaped = decode_html(self.text.as_ref().unwrap());
             if unescaped.is_ok() {
                 let unwrapped = unescaped.unwrap();
-                return Some(unwrapped)
+                return Some(unwrapped);
             }
         }
         None
@@ -144,5 +146,17 @@ mod tests {
         assert_eq!("jl", deserialized.id);
         assert_eq!(3496, deserialized.karma);
         assert!(deserialized.submitted.len() > 3);
+    }
+
+    #[test]
+    fn dead_hnitem() {
+        use std::fs::File;
+        use std::io::prelude::*;
+        let mut contents = String::new();
+        File::open("res/test/dead-item.json")
+            .and_then(|mut file| file.read_to_string(&mut contents))
+            .unwrap();
+        let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
+        assert_eq!(true, deserialized.dead.unwrap());
     }
 }
