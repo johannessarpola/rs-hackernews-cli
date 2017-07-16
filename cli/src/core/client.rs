@@ -112,10 +112,15 @@ pub fn get_comments_for_item(item: &HnItem,
                 .collect::<Vec<Vec<u8>>>()
                 .into_iter()
                 .map(|chunks| deserialize::<HnItem>(chunks))
-                .filter(|item:&HnItem| item.text.is_some()) // for some reason there are comments which have no text
+                .filter(|item:&HnItem| item.text.is_some() && !item.dead.unwrap_or(false)) // for some reason there are comments which have no text
                 .collect::<Vec<HnItem>>();
             state.current_state = AppStates::DoingLocalWork;
-            Some(items)
+            if (items.len() > 0) {
+                Some(items)
+            }
+            else {
+                None
+            }
         }
         None => None,
     }
@@ -156,11 +161,11 @@ pub fn download_page_from_item(item: &HnItem,
             let path = Path::new(&filename);
             let mut file: File =
                 OpenOptions::new().write(true).create(true).open(path.as_os_str()).unwrap();
-            
+
             state.current_state = AppStates::RetrievingResults;
             let page_content = curl_req(url);
 
-            state.current_state = AppStates::DoingLocalWork;   
+            state.current_state = AppStates::DoingLocalWork;
             let page_as_string = String::from_utf8(page_content).unwrap(); // TODO errors
 
             let write_result = file.write_all(page_as_string.as_bytes());

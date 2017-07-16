@@ -2,7 +2,9 @@ use core::models::*;
 use super::colors;
 use formatting::formatter::FormatStr;
 
-pub fn print_comment_and_parent(item: &Option<&HnItem>, comments: &Option<Vec<HnItem>>, format: &FormatStr) {
+pub fn print_comment_and_parent(item: &Option<&HnItem>,
+                                comments: &Option<Vec<HnItem>>,
+                                format: &FormatStr) {
     match *item {
         Some(ref item) => {
             match *comments {
@@ -50,7 +52,7 @@ pub fn print_no_connection() {
 }
 
 pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>, format: &FormatStr) {
-    let coloring = colors::CliColoring::new(colors::Theme::Disabled);  // todo, probably from app_domain
+    let coloring = colors::CliColoring::new(colors::Theme::Disabled); // todo, probably from app_domain
 
     if comments.len() > 0 {
         match item.title {
@@ -73,30 +75,35 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>, format: &FormatStr)
             }
         }
     } else {
-        println!("No comments for {}", item.id);
+        println!("No comments for {} or all were dead (probably spam)",
+                 item.id);
     }
     println!("") // this adds extra space after comments and prevent the input being interfered with bg coloring
+}
+
+pub fn print_no_comments_for(numb: usize) {
+    println!("No comments for {}", numb);
 }
 
 pub fn print_invalid_numb() {
     println!("Received invalid number");
 }
 
-pub fn print_over_limit_but_using_index(numb:usize) {
+pub fn print_over_limit_but_using_index(numb: usize) {
     println!("Over the limit, using index {}", numb);
 }
 
-pub fn print_could_not_get_story(numb:usize) {
+pub fn print_could_not_get_story(numb: usize) {
     println!("Could not get story at index {}", numb);
 }
 
 fn create_comment_row(index: &i32, item: &HnItem, format: &FormatStr) -> Option<String> {
     match item.text_unescaped() {
         Some(ref text) => {
-            let mut s = format!("[{:3}] {:80} ~{}", index, &format.format(text), &item.by);
+            let mut s = format!("[{:3}] {:70} ~{}", index, &format.format(text), &item.by);
             match item.kids {
-                Some(ref kids) => s.push_str(&format!(" with [{:3}] replies", kids.len())),
-                None => ()
+                Some(ref kids) => s.push_str(&format!(" with maybe [{:3}] replies", kids.len())),
+                None => (),
             }
             s.push_str("\n-----");
             Some(s)
