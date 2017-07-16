@@ -1,7 +1,7 @@
 SOLVED BUG: thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: ErrorImpl { code: Message("missing field `by`"), line: 1, column: 83 }', src/libcore/result.rs:859
 note: Run with `RUST_BACKTRACE=1` for a backtrace. -> item.by can be null?
-- These appeared to happen when there were some ghost items which appeared as ids but had no text or anything else in them. Might be because user removed it.
+    - These appeared to happen when there were some ghost items which appeared as ids but had no text or anything else in them. Might be because user removed it.
 
-BUG: There won't be any ui message printed when there are no comments for story or comment but the same comments get printed again.
-BUG: Will cause panic if there are no internet.
+SOLVED BUG: There won't be any ui message printed when there are no comments for story or comment but the same comments get printed again.
 SOLVED(?) BUG: thread "'main' panicked at 'assertion failed: index < len', src/libcollections/vec.rs:768" which is caused when trying to expand comment over the index
+BUG: Will cause panic if there are no internet.

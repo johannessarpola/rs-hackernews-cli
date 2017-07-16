@@ -1,3 +1,5 @@
-Would-be cool
-- Parse the comments so that there's some rudimentary formatting based on the html tags like <p>...</p>
-- Get links in comment with a separate comment and remove the duplication (<a href="link">link</a>)
+This has some listing for features that would be cool
+
+- DONE(coming 0.3.0) Parse the comments so that there's some rudimentary formatting based on the html tags like <p>...</p>
+- DONE(coming 0.3.0) Get links in comment with a separate comment and remove the duplication (<a href="link">link</a>)
+- Show only 10 comments once like stories and use next/back with it
