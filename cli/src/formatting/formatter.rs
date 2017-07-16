@@ -25,5 +25,3 @@ impl FormatStr for Formatters {
         working_copy
     }
 }
-
-// todo higher level api

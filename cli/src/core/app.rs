@@ -102,6 +102,15 @@ impl AppCache {
     }
 }
 
+pub enum AppPreviousCommand {
+    NoPrevious,
+    ExpandedComment,
+    ViewingComments,
+    ViewingStories,
+    OpenedStory,
+    DownloadedPage,
+}
+
 pub enum AppStates {
     WaitingUserInput,
     RetrievingResults,
@@ -111,28 +120,43 @@ pub enum AppStates {
 }
 
 pub struct AppStateMachine {
-    pub viewing_top_stories: bool,
-    pub viewing_comments_for_a_story: bool,
     pub connection_working: bool,
     pub listing_page_index: i32,
     pub comments_page_index: i32,
     pub last_opened_item_id: String,
     pub current_state: AppStates,
+    pub previous_command: AppPreviousCommand,
 }
 
 impl AppStateMachine {
     pub fn new() -> AppStateMachine {
         AppStateMachine {
-            viewing_top_stories: false,
-            viewing_comments_for_a_story: false,
             connection_working: false,
             listing_page_index: 0,
             comments_page_index: 0,
             last_opened_item_id: String::from(""),
             current_state: AppStates::Starting,
+            previous_command: AppPreviousCommand::NoPrevious,
         }
     }
+
+    pub fn register_viewing_comments(&mut self) {
+        self.previous_command = AppPreviousCommand::ViewingComments;
+    }
+    pub fn register_expanded_comment(&mut self) {
+        self.previous_command = AppPreviousCommand::ExpandedComment;
+    }
+    pub fn register_viewing_stories(&mut self) {
+        self.previous_command = AppPreviousCommand::ViewingStories;
+    }
+    pub fn register_downloaded_story(&mut self) {
+        self.previous_command = AppPreviousCommand::DownloadedPage;
+    }
+    pub fn register_opened_story(&mut self) {
+        self.previous_command = AppPreviousCommand::OpenedStory;
+    }
 }
+
 
 struct AppLogFormat;
 

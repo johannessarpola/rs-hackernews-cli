@@ -98,9 +98,11 @@ fn gui_listener(cmd: UiCommand,
             app_state_machine.listing_page_index += 1;
             print_ten_stories(app_domain, app_cache, app_state_machine);
             logging_utils::log_stories_page_with_index(&app_domain.logger,
-                                                       app_state_machine.listing_page_index)
+                                                       app_state_machine.listing_page_index);
+            app_state_machine.register_viewing_stories();
         } else if verb == "top" {
             print_ten_stories(app_domain, app_cache, app_state_machine);
+            app_state_machine.register_viewing_stories();
         } else if verb == "exit" {
             logging_utils::log_exit(&app_domain.logger);
             process::exit(0);
@@ -109,12 +111,13 @@ fn gui_listener(cmd: UiCommand,
             cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
                                           &app_cache.last_retrieved_comments,
                                           &app_domain.formatters);
+            app_state_machine.register_viewing_comments();
         } else if verb == "expand" && has_numb {
-            // todo handle non retreived comments
             load_comments_for_commment(numb, app_domain, app_cache, app_state_machine);
             cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
                                           &app_cache.last_retrieved_comments,
                                           &app_domain.formatters);
+            app_state_machine.register_expanded_comment();
         } else if verb == "load" && has_numb {
             load_page_to_local(numb, app_domain, app_cache, app_state_machine);
         } else if verb == "back" {
@@ -123,9 +126,11 @@ fn gui_listener(cmd: UiCommand,
             }
             print_ten_stories(app_domain, app_cache, app_state_machine);
             logging_utils::log_stories_page_with_index(&app_domain.logger,
-                                                       app_state_machine.listing_page_index)
+                                                       app_state_machine.listing_page_index);
+            app_state_machine.register_viewing_stories();
         } else if verb == "open" && has_numb {
             open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
+            app_state_machine.register_opened_story();
         }
     }
     Ok(())

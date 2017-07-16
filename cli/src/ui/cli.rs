@@ -22,10 +22,11 @@ pub fn print_headline_with_author(item: &HnItem, index: &i32) {
 fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, String> {
     match item.title {
         Some(_) => {
-            let s = format!("[{:3}] {:80} ~ {}",
+            let s = format!("[{:3}] {:70} by {} with at least [{}] comments",
                             index,
                             item.title.as_ref().unwrap(),
-                            item.by);
+                            item.by,
+                            item.kids.as_ref().unwrap_or(&Vec::new()).len());
             Ok(s)
 
         }
