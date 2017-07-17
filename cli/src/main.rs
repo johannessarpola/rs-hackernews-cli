@@ -123,7 +123,7 @@ fn gui_listener(cmd: UiCommand,
                 cli::print_no_comments_for(numb+1);
             }
         } else if verb == "load" && has_numb {
-            load_page_to_local(numb, app_domain, app_cache, app_state_machine);
+            download_page(numb, app_domain, app_cache, app_state_machine);
         } else if verb == "back" {
             if app_state_machine.listing_page_index >= 0 {
                 app_state_machine.listing_page_index -= 1;
@@ -133,8 +133,12 @@ fn gui_listener(cmd: UiCommand,
                                                        app_state_machine.listing_page_index);
             app_state_machine.register_viewing_stories();
         } else if verb == "open" && has_numb {
-            open_page_with_default_browser(numb, app_domain, app_cache, app_state_machine);
+            open_page(numb, app_domain, app_cache, app_state_machine);
             app_state_machine.register_opened_story();
+        }
+        // todo print help
+        else {
+            cli::print_invalid_command();
         }
     }
     Ok(())
@@ -165,7 +169,7 @@ fn load_comments_for_story(numb: usize,
         if act_numb != numb {
             cli::print_over_limit_but_using_index(act_numb + 1);
         }
-        let parent_opt = get_story(act_numb, app_domain, app_cache, app_state_machine);
+        let parent_opt = retrieve_story(act_numb, app_domain, app_cache, app_state_machine);
         match parent_opt {
             Some(parent) => {
                 return retrieve_comments_for_item(parent, app_domain, app_cache, app_state_machine)
@@ -214,7 +218,7 @@ fn retrieve_comments_for_item(parent: HnItem,
     }
 }
 
-fn get_story(numb: usize,
+fn retrieve_story(numb: usize,
              app_domain: &mut AppDomain,
              app_cache: &mut AppCache,
              app_state_machine: &mut AppStateMachine)
@@ -225,7 +229,7 @@ fn get_story(numb: usize,
     item
 }
 
-fn open_page_with_default_browser(numb: usize,
+fn open_page(numb: usize,
                                   app_domain: &mut AppDomain,
                                   app_cache: &mut AppCache,
                                   app_state_machine: &mut AppStateMachine) {
@@ -239,7 +243,7 @@ fn open_page_with_default_browser(numb: usize,
     }
 }
 
-fn load_page_to_local(numb: usize,
+fn download_page(numb: usize,
                       app_domain: &mut AppDomain,
                       app_cache: &mut AppCache,
                       app_state_machine: &mut AppStateMachine) {

@@ -16,6 +16,10 @@ pub fn print_comment_and_parent(item: &Option<&HnItem>,
     }
 }
 
+pub fn print_invalid_command() {
+    println!("Could not understand command, please try again or check help");
+}
+
 pub fn print_headline_with_author(item: &HnItem, index: &i32) {
     let s = create_headline_with_author(item, index).unwrap(); // Not handling errs
     println!("{}", s);
@@ -24,7 +28,7 @@ pub fn print_headline_with_author(item: &HnItem, index: &i32) {
 fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, String> {
     match item.title {
         Some(_) => {
-            let s = format!("[{:3}] {:70} by {} with at least [{}] comments",
+            let s = format!("[{:3}] {:70} by {} with [{}] comments",
                             index,
                             item.title.as_ref().unwrap(),
                             item.by,
@@ -105,7 +109,7 @@ fn create_comment_row(index: &i32, item: &HnItem, format: &FormatStr) -> Option<
                 Some(ref kids) => s.push_str(&format!(" with maybe [{:3}] replies", kids.len())),
                 None => (),
             }
-            s.push_str("\n-----");
+            // s.push_str("\n-----");
             Some(s)
         }
         None => None,
