@@ -116,6 +116,7 @@ fn gui_listener(cmd: UiCommand,
             });
         } else if verb == "expand" && has_numb {
             safe_load_comment(numb, app_domain, app_cache, app_state_machine).and_then(|item| {
+                app_state_machine.comments_page_index = 0; // reset commets index
                 handle_comments(item, app_domain, app_cache, app_state_machine);
                 app_state_machine.register_expanded_comment();
                 Some(0)
@@ -162,6 +163,7 @@ fn handle_comments(item: HnItem,
                    app_domain: &mut AppDomain,
                    app_cache: &mut AppCache,
                    app_state_machine: &mut AppStateMachine) {
+    // todo This overrides the cached comments even if they were spam, probably fixed once the back traverse for comments is implemented
     retrieve_comments_for_item(item, app_domain, app_cache, app_state_machine);
     print_ten_comments(app_domain, app_cache, app_state_machine);
 }
