@@ -5,3 +5,6 @@ note: Run with `RUST_BACKTRACE=1` for a backtrace. -> item.by can be null?
 SOLVED BUG: There won't be any ui message printed when there are no comments for story or comment but the same comments get printed again.
 SOLVED(?) BUG: thread "'main' panicked at 'assertion failed: index < len', src/libcollections/vec.rs:768" which is caused when trying to expand comment over the index
 BUG: Will cause panic if there are no internet.
+
+BUG: https://hacker-news.firebaseio.com/v0/item/14805523.json?print=pretty > expand 18 > No comments for 14805523 or all were dead (probably spam
+    - might be a problem with index after rework

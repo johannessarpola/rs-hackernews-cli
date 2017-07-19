@@ -2,13 +2,14 @@ use core::models::*;
 use super::colors;
 use formatting::formatter::FormatStr;
 
-pub fn print_comment_and_parent(item: &Option<&HnItem>,
-                                comments: &Option<Vec<HnItem>>,
-                                format: &FormatStr) {
-    match *item {
+pub fn print_comment_and_parent(item: Option<&HnItem>,
+                                comments: &Option<Vec<&HnItem>>,
+                                format: &FormatStr, 
+                                index:usize) {
+    match item {
         Some(ref item) => {
             match *comments {
-                Some(ref comments) => print_comments(item, comments, format),
+                Some(ref comments) => print_comments(item, comments, format, index),
                 None => could_not_get_any_commments_for_item(item), 
             }
         }
@@ -55,7 +56,7 @@ pub fn print_no_connection() {
     println!("Could not detect internet connection, please check it and try again");
 }
 
-pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>, format: &FormatStr) {
+pub fn print_comments(item: &HnItem, comments: &Vec<&HnItem>, format: &FormatStr, index:usize) {
     let coloring = colors::CliColoring::new(colors::Theme::Disabled); // todo, probably from app_domain
 
     if comments.len() > 0 {
@@ -63,10 +64,10 @@ pub fn print_comments(item: &HnItem, comments: &Vec<HnItem>, format: &FormatStr)
             Some(ref title) => println!("Comments for item id {} with title {}", &item.id, title),
             None => println!("Comments for item id {}", &item.id),
         }
-        let mut comment_index = 0;
+        let mut comment_index = index;
         for comment in comments {
             comment_index += 1;
-            let res = create_comment_row(&comment_index, &comment, format);
+            let res = create_comment_row(comment_index, &comment, format);
             if res.is_some() {
                 if comment_index % 2 == 0 {
                     coloring.zebra_coloring();
@@ -101,7 +102,7 @@ pub fn print_could_not_get_story(numb: usize) {
     println!("Could not get story at index {}", numb);
 }
 
-fn create_comment_row(index: &i32, item: &HnItem, format: &FormatStr) -> Option<String> {
+fn create_comment_row(index: usize, item: &HnItem, format: &FormatStr) -> Option<String> {
     match item.text_unescaped() {
         Some(ref text) => {
             let mut s = format!("[{:3}] {:70} ~{}", index, &format.format(text), &item.by);
@@ -154,7 +155,7 @@ mod tests {
             .and_then(|mut file| file.read_to_string(&mut contents))
             .unwrap();
         let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
-        let commentStr = create_comment_row(&1, &deserialized, &formatting).unwrap();
+        let commentStr = create_comment_row(1, &deserialized, &formatting).unwrap();
         assert!(commentStr.contains("is not a valid concern. Unless you are planning"));
         assert!(commentStr.contains("cholantesh"));
 

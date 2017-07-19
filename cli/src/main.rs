@@ -95,11 +95,13 @@ fn gui_listener(cmd: UiCommand,
         }
 
         if verb == "next" {
-            app_state_machine.listing_page_index += 1;
-            print_ten_stories(app_domain, app_cache, app_state_machine);
-            logging_utils::log_stories_page_with_index(&app_domain.logger,
-                                                       app_state_machine.listing_page_index);
-            app_state_machine.register_viewing_stories();
+            if (app_state_machine.viewing_stories()) {
+                handle_next_stories(app_domain, app_cache, app_state_machine);
+            } else if (app_state_machine.viewing_comments()) {
+                handle_next_comments(app_domain, app_cache, app_state_machine);
+            } else {
+                // todo wrong state, something went wrong
+            }
         } else if verb == "top" {
             print_ten_stories(app_domain, app_cache, app_state_machine);
             app_state_machine.register_viewing_stories();
@@ -107,21 +109,17 @@ fn gui_listener(cmd: UiCommand,
             logging_utils::log_exit(&app_domain.logger);
             process::exit(0);
         } else if verb == "comments" && has_numb {
-            load_comments_for_story(numb, app_domain, app_cache, app_state_machine);
-            cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
-                                          &app_cache.last_retrieved_comments,
-                                          &app_domain.formatters);
-            app_state_machine.register_viewing_comments();
+            safe_load_story(numb, app_domain, app_cache, app_state_machine).and_then(|item| {
+                handle_comments(item, app_domain, app_cache, app_state_machine);
+                app_state_machine.register_viewing_comments();
+                Some(0)
+            });
         } else if verb == "expand" && has_numb {
-            if load_comments_for_commment(numb, app_domain, app_cache, app_state_machine) {
-                cli::print_comment_and_parent(&app_cache.last_parent_items.back(),
-                                              &app_cache.last_retrieved_comments,
-                                              &app_domain.formatters);
+            safe_load_comment(numb, app_domain, app_cache, app_state_machine).and_then(|item| {
+                handle_comments(item, app_domain, app_cache, app_state_machine);
                 app_state_machine.register_expanded_comment();
-            }
-            else {
-                cli::print_no_comments_for(numb+1);
-            }
+                Some(0)
+            });
         } else if verb == "load" && has_numb {
             download_page(numb, app_domain, app_cache, app_state_machine);
         } else if verb == "back" {
@@ -143,6 +141,31 @@ fn gui_listener(cmd: UiCommand,
     }
     Ok(())
 }
+fn handle_next_comments(app_domain: &mut AppDomain,
+                        app_cache: &mut AppCache,
+                        app_state_machine: &mut AppStateMachine) {
+    app_state_machine.comments_page_index += 1;
+    print_ten_comments(app_domain, app_cache, app_state_machine);
+}
+
+fn handle_next_stories(app_domain: &mut AppDomain,
+                       app_cache: &mut AppCache,
+                       app_state_machine: &mut AppStateMachine) {
+    app_state_machine.listing_page_index += 1;
+    print_ten_stories(app_domain, app_cache, app_state_machine);
+    logging_utils::log_stories_page_with_index(&app_domain.logger,
+                                               app_state_machine.listing_page_index);
+    app_state_machine.register_viewing_stories();
+}
+
+fn handle_comments(item: HnItem,
+                   app_domain: &mut AppDomain,
+                   app_cache: &mut AppCache,
+                   app_state_machine: &mut AppStateMachine) {
+    retrieve_comments_for_item(item, app_domain, app_cache, app_state_machine);
+    print_ten_comments(app_domain, app_cache, app_state_machine);
+}
+
 fn check_numb_against_stories(numb: usize, app_cache: &mut AppCache) -> Option<usize> {
     match app_cache.stories_len() {
         Some(l) => Some(min((l - 1), numb)),
@@ -157,10 +180,11 @@ fn check_numb_against_comments(numb: usize, app_cache: &mut AppCache) -> Option<
     }
 }
 
-fn load_comments_for_story(numb: usize,
-                           app_domain: &mut AppDomain,
-                           app_cache: &mut AppCache,
-                           app_state_machine: &mut AppStateMachine) -> bool {
+fn safe_load_story(numb: usize,
+                   app_domain: &mut AppDomain,
+                   app_cache: &mut AppCache,
+                   app_state_machine: &mut AppStateMachine)
+                   -> Option<HnItem> {
     let opt_numb = check_numb_against_stories(numb, app_cache);
     if opt_numb.is_none() {
         cli::print_invalid_numb();
@@ -172,34 +196,31 @@ fn load_comments_for_story(numb: usize,
         let parent_opt = retrieve_story(act_numb, app_domain, app_cache, app_state_machine);
         match parent_opt {
             Some(parent) => {
-                return retrieve_comments_for_item(parent, app_domain, app_cache, app_state_machine)
+                return Some(parent); // retrieve_comments_for_item(parent, app_domain, app_cache, app_state_machine)
             }
             None => cli::print_could_not_get_story(act_numb + 1),
         }
     }
-    false
+    None
 }
 
-fn load_comments_for_commment(numb: usize,
-                              app_domain: &mut AppDomain,
-                              mut app_cache: &mut AppCache,
-                              app_state_machine: &mut AppStateMachine)
-                              -> bool {
+fn safe_load_comment(numb: usize,
+                     app_domain: &mut AppDomain,
+                     mut app_cache: &mut AppCache,
+                     app_state_machine: &mut AppStateMachine)
+                     -> Option<HnItem> {
 
     let opt_numb = check_numb_against_comments(numb, app_cache);
     if opt_numb.is_none() {
         cli::print_invalid_numb();
     } else {
-        let act_numb = opt_numb.unwrap();
+        let act_numb = opt_numb.unwrap(); // todo did this handle index somewhere?
         if act_numb != numb {
             cli::print_over_limit_but_using_index(act_numb + 1);
         }
-        let item = app_cache.get_comment_if_kids(act_numb);
-        if item.is_some() {
-            return retrieve_comments_for_item(item.unwrap(), app_domain, app_cache, app_state_machine)
-        }
+        return app_cache.get_comment_if_kids(act_numb);
     }
-    false
+    None
 }
 
 fn retrieve_comments_for_item(parent: HnItem,
@@ -219,10 +240,10 @@ fn retrieve_comments_for_item(parent: HnItem,
 }
 
 fn retrieve_story(numb: usize,
-             app_domain: &mut AppDomain,
-             app_cache: &mut AppCache,
-             app_state_machine: &mut AppStateMachine)
-             -> Option<HnItem> {
+                  app_domain: &mut AppDomain,
+                  app_cache: &mut AppCache,
+                  app_state_machine: &mut AppStateMachine)
+                  -> Option<HnItem> {
     let s = format!("{}",
                     app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).ok();
@@ -230,9 +251,9 @@ fn retrieve_story(numb: usize,
 }
 
 fn open_page(numb: usize,
-                                  app_domain: &mut AppDomain,
-                                  app_cache: &mut AppCache,
-                                  app_state_machine: &mut AppStateMachine) {
+             app_domain: &mut AppDomain,
+             app_cache: &mut AppCache,
+             app_state_machine: &mut AppStateMachine) {
     let s = format!("{}",
                     app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
@@ -244,9 +265,9 @@ fn open_page(numb: usize,
 }
 
 fn download_page(numb: usize,
-                      app_domain: &mut AppDomain,
-                      app_cache: &mut AppCache,
-                      app_state_machine: &mut AppStateMachine) {
+                 app_domain: &mut AppDomain,
+                 app_cache: &mut AppCache,
+                 app_state_machine: &mut AppStateMachine) {
     let s = format!("{}",
                     app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
@@ -265,6 +286,28 @@ fn download_page(numb: usize,
         }
     }
 
+}
+fn print_ten_comments(app_domain: &mut AppDomain,
+                      app_cache: &mut AppCache,
+                      app_state_machine: &mut AppStateMachine) {
+
+    let skipped: usize = (app_state_machine.comments_page_index * 10) as usize;
+    let mut partition: Option<Vec<&HnItem>> = None;
+    match app_cache.last_retrieved_comments {
+        Some(ref comments) => {
+            let mut p: Vec<&HnItem> = Vec::new();
+            for comment in comments.iter().skip(skipped).take(10) {
+                p.push(comment);
+            }
+            partition = Some(p);
+        }
+        None => (),
+    }
+    cli::print_comment_and_parent(app_cache.last_parent_items.back(),
+                                  &partition,
+                                  &app_domain.formatters,
+                                  skipped);
+    app_state_machine.register_viewing_comments(); // todo check if this is needed
 }
 
 fn print_ten_stories(app_domain: &mut AppDomain,

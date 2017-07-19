@@ -102,6 +102,7 @@ impl AppCache {
     }
 }
 
+#[derive(PartialEq, Eq)]
 pub enum AppPreviousCommand {
     NoPrevious,
     ExpandedComment,
@@ -154,6 +155,13 @@ impl AppStateMachine {
     }
     pub fn register_opened_story(&mut self) {
         self.previous_command = AppPreviousCommand::OpenedStory;
+    }
+    pub fn viewing_comments(&self) -> bool {
+        self.previous_command == AppPreviousCommand::ExpandedComment || self.previous_command == AppPreviousCommand::ViewingComments
+    }
+    pub fn viewing_stories(&self) -> bool {
+        // we can just use negation of viewing comments currently
+        !self.viewing_comments()
     }
 }
 
