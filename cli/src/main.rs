@@ -326,11 +326,7 @@ fn print_ten_comments(app_domain: &mut AppDomain,
     let mut partition: Option<Vec<&HnItem>> = None;
     match app_cache.last_retrieved_comments {
         Some(ref comments) => {
-            let mut p: Vec<&HnItem> = Vec::new();
-            for comment in comments.iter().skip(skipped).take(10) {
-                p.push(comment);
-            }
-            partition = Some(p);
+            partition = Some(comments.iter().skip(skipped).take(10).collect());
         }
         None => (),
     }
