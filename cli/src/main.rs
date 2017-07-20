@@ -102,6 +102,14 @@ fn gui_listener(cmd: UiCommand,
             } else {
                 // todo wrong state, something went wrong
             }
+        } else if verb == "back" {
+            if (app_state_machine.viewing_stories()) {
+                handle_previous_stories(app_domain, app_cache, app_state_machine);
+            } else if (app_state_machine.viewing_comments()) {
+                handle_previous_comments(app_domain, app_cache, app_state_machine);
+            } else {
+                // todo wrong state, something went wrong
+            }
         } else if verb == "top" {
             print_ten_stories(app_domain, app_cache, app_state_machine);
             app_state_machine.register_viewing_stories();
@@ -116,21 +124,13 @@ fn gui_listener(cmd: UiCommand,
             });
         } else if verb == "expand" && has_numb {
             safe_load_comment(numb, app_domain, app_cache, app_state_machine).and_then(|item| {
-                app_state_machine.comments_page_index = 0; // reset commets index
+                app_state_machine.comments_page_index = 0; // reset comments index
                 handle_comments(item, app_domain, app_cache, app_state_machine);
                 app_state_machine.register_expanded_comment();
                 Some(0)
             });
         } else if verb == "load" && has_numb {
             download_page(numb, app_domain, app_cache, app_state_machine);
-        } else if verb == "back" {
-            if app_state_machine.listing_page_index >= 0 {
-                app_state_machine.listing_page_index -= 1;
-            }
-            print_ten_stories(app_domain, app_cache, app_state_machine);
-            logging_utils::log_stories_page_with_index(&app_domain.logger,
-                                                       app_state_machine.listing_page_index);
-            app_state_machine.register_viewing_stories();
         } else if verb == "open" && has_numb {
             open_page(numb, app_domain, app_cache, app_state_machine);
             app_state_machine.register_opened_story();
@@ -142,6 +142,7 @@ fn gui_listener(cmd: UiCommand,
     }
     Ok(())
 }
+
 fn handle_next_comments(app_domain: &mut AppDomain,
                         app_cache: &mut AppCache,
                         app_state_machine: &mut AppStateMachine) {
@@ -149,14 +150,30 @@ fn handle_next_comments(app_domain: &mut AppDomain,
     print_ten_comments(app_domain, app_cache, app_state_machine);
 }
 
+fn handle_previous_comments(app_domain: &mut AppDomain,
+                            app_cache: &mut AppCache,
+                            app_state_machine: &mut AppStateMachine) {
+    if app_state_machine.comments_page_index >= 0 {
+        app_state_machine.comments_page_index -= 1;
+    }
+    print_ten_comments(app_domain, app_cache, app_state_machine);
+}
+
+
 fn handle_next_stories(app_domain: &mut AppDomain,
                        app_cache: &mut AppCache,
                        app_state_machine: &mut AppStateMachine) {
     app_state_machine.listing_page_index += 1;
-    print_ten_stories(app_domain, app_cache, app_state_machine);
-    logging_utils::log_stories_page_with_index(&app_domain.logger,
-                                               app_state_machine.listing_page_index);
-    app_state_machine.register_viewing_stories();
+    print_and_log_stories(app_domain, app_cache, app_state_machine);
+}
+
+fn handle_previous_stories(app_domain: &mut AppDomain,
+                           app_cache: &mut AppCache,
+                           app_state_machine: &mut AppStateMachine) {
+    if app_state_machine.listing_page_index >= 0 {
+        app_state_machine.listing_page_index -= 1;
+    }
+    print_and_log_stories(app_domain, app_cache, app_state_machine);
 }
 
 fn handle_comments(item: HnItem,
@@ -167,6 +184,17 @@ fn handle_comments(item: HnItem,
     retrieve_comments_for_item(item, app_domain, app_cache, app_state_machine);
     print_ten_comments(app_domain, app_cache, app_state_machine);
 }
+
+fn print_and_log_stories(app_domain: &mut AppDomain,
+                         app_cache: &mut AppCache,
+                         app_state_machine: &mut AppStateMachine) {
+    print_ten_stories(app_domain, app_cache, app_state_machine);
+    logging_utils::log_stories_page_with_index(&app_domain.logger,
+                                               app_state_machine.listing_page_index);
+    app_state_machine.register_viewing_stories();
+
+}
+
 
 fn check_numb_against_stories(numb: usize, app_cache: &mut AppCache) -> Option<usize> {
     match app_cache.stories_len() {
@@ -289,6 +317,7 @@ fn download_page(numb: usize,
     }
 
 }
+
 fn print_ten_comments(app_domain: &mut AppDomain,
                       app_cache: &mut AppCache,
                       app_state_machine: &mut AppStateMachine) {
@@ -309,7 +338,6 @@ fn print_ten_comments(app_domain: &mut AppDomain,
                                   &partition,
                                   &app_domain.formatters,
                                   skipped);
-    app_state_machine.register_viewing_comments(); // todo check if this is needed
 }
 
 fn print_ten_stories(app_domain: &mut AppDomain,

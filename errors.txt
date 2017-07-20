@@ -8,3 +8,7 @@ SOLVED BUG: https://hacker-news.firebaseio.com/v0/item/14805523.json?print=prett
     - might be a problem with index after rework (was correct cause)
 
 BUG: Will cause panic if there are no internet.
+BUG: if no more comments and tries to next or back : next > No comments for 14810384 or all were dead (probably spam) 
+BUG: 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Io(Error { repr: Custom(Custom { kind: BrokenPipe, error: StringError("broken pipe") }) })'
+- caused by chain comments x > next > back > top
+- might be caused by parsing cmds?
