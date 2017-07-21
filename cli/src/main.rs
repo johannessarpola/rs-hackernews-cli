@@ -137,7 +137,7 @@ fn gui_listener(cmd: UiCommand,
             app_state_machine.register_opened_story();
         }
         else if verb == "help" {
-            println!("\n{}", helpers::io_utils::read_file("res/help.txt").unwrap_or("Could not load help.txt".to_string()));
+            cli::print_help();
         }
         // todo print help
         else {

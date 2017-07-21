@@ -2,6 +2,22 @@ use core::models::*;
 use super::colors;
 use formatting::formatter::FormatStr;
 
+const help_str: &'static str  = "
+top             > opens the currently opened page of stories (reprints)
+next            > retrieves the next 10 stories or comments
+back            > retrieves the previous 10 stories or comments
+comments [num]  > retrieves comments for given story, based on the id of the story shown in [num] ten at a time
+expand [num]    > once comments are open you can retrieve the sub comments for the comment with it ten at a time
+load [num]      > loads the page linked in the story as local html
+open [num]      > opens the link with default browser
+exit            > quits the application
+
+[num] replace the number with the printed out index";
+
+pub fn print_help() {
+    println!("{}", help_str);
+}
+
 pub fn print_tried_to_navigate_over_index() {
     println!("Tried to access next or back over the index");
 }
@@ -167,4 +183,5 @@ mod tests {
         assert!(commentStr.contains("cholantesh"));
 
     }
+    
 }
