@@ -35,8 +35,8 @@ impl CliColoring {
                 self.bg.lgrey();
             }
             Theme::Green => {
-                self.bg.rgb(1, 2, 4); // todo different themes
-                self.fg.rgb(1, 2, 2);
+                self.bg.rgb(0, 0, 0);
+                self.fg.rgb(32, 79, 25);
             }
             Theme::Disabled => {
                 // no theming
@@ -65,7 +65,7 @@ impl Display for Theme {
 
 impl Background {
     pub fn lgrey(&self) {
-        print!("{}", color::Bg(color::Rgb(4, 4, 4)));
+        print!("{}", color::Bg(color::Rgb(180, 180, 180)));
     }
     pub fn lgreen(&self) {
         print!("{}", color::Bg(color::LightGreen));
@@ -84,7 +84,7 @@ impl Background {
 }
 impl Foreground {
     pub fn lgrey(&self) {
-        print!("{}", color::Fg(color::Rgb(4, 4, 4)));
+        print!("{}", color::Fg(color::Rgb(180, 180, 180)));
     }
 
     pub fn red(&self) {

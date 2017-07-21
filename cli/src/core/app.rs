@@ -122,8 +122,8 @@ pub enum AppStates {
 
 pub struct AppStateMachine {
     pub connection_working: bool,
-    pub listing_page_index: i32,
-    pub comments_page_index: i32,
+    pub listing_page_index: usize,
+    pub comments_page_index: usize,
     pub last_opened_item_id: String,
     pub current_state: AppStates,
     pub previous_command: AppPreviousCommand,

@@ -50,7 +50,7 @@ fn main() {
     info!(&app_domain.logger, "Application started");
     app_cache.retrieved_top_stories =
         client::get_top_story_ids(&mut app_domain, &mut app_state_machine).ok();
-    print_ten_stories(&mut app_domain, &mut app_cache, &mut app_state_machine);
+    output_stories(&mut app_domain, &mut app_cache, &mut app_state_machine);
     let (sender, receiver) = mpsc::channel(1);
 
     spawn(move || {
@@ -111,7 +111,7 @@ fn gui_listener(cmd: UiCommand,
                 // todo wrong state, something went wrong
             }
         } else if verb == "top" {
-            print_ten_stories(app_domain, app_cache, app_state_machine);
+            output_stories(app_domain, app_cache, app_state_machine);
             app_state_machine.register_viewing_stories();
         } else if verb == "exit" {
             logging_utils::log_exit(&app_domain.logger);
@@ -146,34 +146,54 @@ fn gui_listener(cmd: UiCommand,
 fn handle_next_comments(app_domain: &mut AppDomain,
                         app_cache: &mut AppCache,
                         app_state_machine: &mut AppStateMachine) {
-    app_state_machine.comments_page_index += 1;
-    print_ten_comments(app_domain, app_cache, app_state_machine);
+    let max_comments = app_cache.comments_len();
+    if max_comments.is_some() &&
+        max_comments.map(|val| under_index_and_over10(val, app_state_machine.listing_page_index)).unwrap() {
+        app_state_machine.comments_page_index += 1;
+        output_comments(app_domain, app_cache, app_state_machine);
+    } else {
+        cli::print_tried_to_navigate_over_index();
+    }
 }
 
 fn handle_previous_comments(app_domain: &mut AppDomain,
                             app_cache: &mut AppCache,
                             app_state_machine: &mut AppStateMachine) {
-    if app_state_machine.comments_page_index >= 0 {
+    if app_state_machine.comments_page_index > 0 {
         app_state_machine.comments_page_index -= 1;
+        output_comments(app_domain, app_cache, app_state_machine);
+    } else {
+        cli::print_tried_to_navigate_over_index();
     }
-    print_ten_comments(app_domain, app_cache, app_state_machine);
 }
 
 
 fn handle_next_stories(app_domain: &mut AppDomain,
                        app_cache: &mut AppCache,
                        app_state_machine: &mut AppStateMachine) {
-    app_state_machine.listing_page_index += 1;
-    print_and_log_stories(app_domain, app_cache, app_state_machine);
+    let max_stories = app_cache.stories_len();
+    if max_stories.is_some() && 
+        max_stories.map(|val| under_index_and_over10(val, app_state_machine.listing_page_index)).unwrap() {
+        app_state_machine.listing_page_index += 1;
+        print_and_log_stories(app_domain, app_cache, app_state_machine);
+    } else {
+        cli::print_tried_to_navigate_over_index();
+    }
+}
+
+fn under_index_and_over10(val: usize, index:usize) -> bool {
+    val > 10 && index * 10 <= val
 }
 
 fn handle_previous_stories(app_domain: &mut AppDomain,
                            app_cache: &mut AppCache,
                            app_state_machine: &mut AppStateMachine) {
-    if app_state_machine.listing_page_index >= 0 {
+    if app_state_machine.listing_page_index > 0 {
         app_state_machine.listing_page_index -= 1;
+        print_and_log_stories(app_domain, app_cache, app_state_machine);
+    } else {
+        cli::print_tried_to_navigate_over_index();
     }
-    print_and_log_stories(app_domain, app_cache, app_state_machine);
 }
 
 fn handle_comments(item: HnItem,
@@ -182,13 +202,13 @@ fn handle_comments(item: HnItem,
                    app_state_machine: &mut AppStateMachine) {
     // todo This overrides the cached comments even if they were spam, probably fixed once the back traverse for comments is implemented
     retrieve_comments_for_item(item, app_domain, app_cache, app_state_machine);
-    print_ten_comments(app_domain, app_cache, app_state_machine);
+    output_comments(app_domain, app_cache, app_state_machine);
 }
 
 fn print_and_log_stories(app_domain: &mut AppDomain,
                          app_cache: &mut AppCache,
                          app_state_machine: &mut AppStateMachine) {
-    print_ten_stories(app_domain, app_cache, app_state_machine);
+    output_stories(app_domain, app_cache, app_state_machine);
     logging_utils::log_stories_page_with_index(&app_domain.logger,
                                                app_state_machine.listing_page_index);
     app_state_machine.register_viewing_stories();
@@ -318,7 +338,7 @@ fn download_page(numb: usize,
 
 }
 
-fn print_ten_comments(app_domain: &mut AppDomain,
+fn output_comments(app_domain: &mut AppDomain,
                       app_cache: &mut AppCache,
                       app_state_machine: &mut AppStateMachine) {
 
@@ -330,13 +350,13 @@ fn print_ten_comments(app_domain: &mut AppDomain,
         }
         None => (),
     }
-    cli::print_comment_and_parent(app_cache.last_parent_items.back(),
+    cli::print_comments_and_parent(app_cache.last_parent_items.back(),
                                   &partition,
                                   &app_domain.formatters,
                                   skipped);
 }
 
-fn print_ten_stories(app_domain: &mut AppDomain,
+fn output_stories(app_domain: &mut AppDomain,
                      app_cache: &mut AppCache,
                      app_state_machine: &mut AppStateMachine) {
 

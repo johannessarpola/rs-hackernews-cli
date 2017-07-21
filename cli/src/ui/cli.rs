@@ -2,7 +2,11 @@ use core::models::*;
 use super::colors;
 use formatting::formatter::FormatStr;
 
-pub fn print_comment_and_parent(item: Option<&HnItem>,
+pub fn print_tried_to_navigate_over_index() {
+    println!("Tried to access next or back over the index");
+}
+
+pub fn print_comments_and_parent(item: Option<&HnItem>,
                                 comments: &Option<Vec<&HnItem>>,
                                 format: &FormatStr, 
                                 index:usize) {
@@ -57,7 +61,7 @@ pub fn print_no_connection() {
 }
 
 pub fn print_comments(item: &HnItem, comments: &Vec<&HnItem>, format: &FormatStr, index:usize) {
-    let coloring = colors::CliColoring::new(colors::Theme::Disabled); // todo, probably from app_domain
+    let coloring = colors::CliColoring::new(colors::Theme::Disabled); // todo, probably from app_domain. Not working currently on Mac
 
     if comments.len() > 0 {
         match item.title {
@@ -105,12 +109,11 @@ pub fn print_could_not_get_story(numb: usize) {
 fn create_comment_row(index: usize, item: &HnItem, format: &FormatStr) -> Option<String> {
     match item.text_unescaped() {
         Some(ref text) => {
-            let mut s = format!("[{:3}] {:70} \n    ~ {}", index, &format.format(text), &item.by);
+            let mut s = format!("[{:3}] {:70} \n    by {}", index, &format.format(text), &item.by);
             match item.kids {
-                Some(ref kids) => s.push_str(&format!(" with maybe [{:3}] replies", kids.len())),
+                Some(ref kids) => s.push_str(&format!(" with [{:3}] comments", kids.len())),
                 None => (),
             }
-            // s.push_str("\n-----");
             Some(s)
         }
         None => None,
