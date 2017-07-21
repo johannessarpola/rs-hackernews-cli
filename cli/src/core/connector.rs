@@ -58,7 +58,7 @@ impl Service for HttpsConnector {
 mod tests {
     use super::*;
     use hyper::{Client, Request, Method, StatusCode};
-    use tokio_core::reactor::{Core, Handle};
+    use tokio_core::reactor::{Core};
     use hyper::client::HttpConnector;
     use native_tls::TlsConnector;
     use std::sync::Arc;

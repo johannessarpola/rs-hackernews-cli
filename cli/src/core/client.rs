@@ -114,7 +114,7 @@ pub fn get_comments_for_item(item: &HnItem,
                 .filter(|item:&HnItem| item.text.is_some() && !item.dead.unwrap_or(false)) // for some reason there are comments which have no text
                 .collect::<Vec<HnItem>>();
             state.current_state = AppStates::DoingLocalWork;
-            if (items.len() > 0) {
+            if items.len() > 0 {
                 Some(items)
             }
             else {
@@ -211,7 +211,6 @@ mod tests {
     use hyper::StatusCode;
 
     use super::*;
-    use core::app::*;
 
     #[test]
     fn request_item_test() {

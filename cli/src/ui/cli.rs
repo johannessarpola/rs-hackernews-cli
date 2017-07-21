@@ -2,7 +2,7 @@ use core::models::*;
 use super::colors;
 use formatting::formatter::FormatStr;
 
-const help_str: &'static str  = "
+const HELP_STR: &'static str  = "
 top             > opens the currently opened page of stories (reprints)
 next            > retrieves the next 10 stories or comments
 back            > retrieves the previous 10 stories or comments
@@ -15,7 +15,7 @@ exit            > quits the application
 [num] replace the number with the printed out index";
 
 pub fn print_help() {
-    println!("{}", help_str);
+    println!("{}", HELP_STR);
 }
 
 pub fn print_tried_to_navigate_over_index() {
@@ -178,9 +178,9 @@ mod tests {
             .and_then(|mut file| file.read_to_string(&mut contents))
             .unwrap();
         let deserialized: HnItem = serde_json::from_str(&contents).unwrap();
-        let commentStr = create_comment_row(1, &deserialized, &formatting).unwrap();
-        assert!(commentStr.contains("is not a valid concern. Unless you are planning"));
-        assert!(commentStr.contains("cholantesh"));
+        let comment_str = create_comment_row(1, &deserialized, &formatting).unwrap();
+        assert!(comment_str.contains("is not a valid concern. Unless you are planning"));
+        assert!(comment_str.contains("cholantesh"));
 
     }
     

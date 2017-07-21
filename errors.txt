@@ -6,9 +6,12 @@ SOLVED BUG: There won't be any ui message printed when there are no comments for
 SOLVED(?) BUG: thread "'main' panicked at 'assertion failed: index < len', src/libcollections/vec.rs:768" which is caused when trying to expand comment over the index
 SOLVED BUG: https://hacker-news.firebaseio.com/v0/item/14805523.json?print=pretty > expand 18 > No comments for 14805523 or all were dead (probably spam
     - might be a problem with index after rework (was correct cause)
+BUG SOLVED: if no more comments and tries to next or back : next > No comments for 14810384 or all were dead (probably spam) 
 
 BUG: Will cause panic if there are no internet.
-BUG: if no more comments and tries to next or back : next > No comments for 14810384 or all were dead (probably spam) 
 BUG: 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Io(Error { repr: Custom(Custom { kind: BrokenPipe, error: StringError("broken pipe") }) })'
 - caused by chain comments x > next > back > top
 - might be caused by parsing cmds?
+- this might be issue with broken pipe in mpsc
+BUG: ... 55, 49, 50, 51, 10, 37, 37, 69, 79, 70, 10], error: Utf8Error { valid_up_to: 10, error_len: Some(1) } }', src/libcore/result.rs:859
+- Caused by calling load on link which is a pdf for example

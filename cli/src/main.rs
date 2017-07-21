@@ -95,17 +95,17 @@ fn gui_listener(cmd: UiCommand,
         }
 
         if verb == "next" {
-            if (app_state_machine.viewing_stories()) {
+            if app_state_machine.viewing_stories() {
                 handle_next_stories(app_domain, app_cache, app_state_machine);
-            } else if (app_state_machine.viewing_comments()) {
+            } else if app_state_machine.viewing_comments() {
                 handle_next_comments(app_domain, app_cache, app_state_machine);
             } else {
                 // todo wrong state, something went wrong
             }
         } else if verb == "back" {
-            if (app_state_machine.viewing_stories()) {
+            if app_state_machine.viewing_stories() {
                 handle_previous_stories(app_domain, app_cache, app_state_machine);
-            } else if (app_state_machine.viewing_comments()) {
+            } else if app_state_machine.viewing_comments() {
                 handle_previous_comments(app_domain, app_cache, app_state_machine);
             } else {
                 // todo wrong state, something went wrong
@@ -117,13 +117,14 @@ fn gui_listener(cmd: UiCommand,
             logging_utils::log_exit(&app_domain.logger);
             process::exit(0);
         } else if verb == "comments" && has_numb {
-            safe_load_story(numb, app_domain, app_cache, app_state_machine).and_then(|item| {
+            // needs cache and state as they're retrieved from remote
+            safe_load_story(numb, app_domain, app_cache, app_state_machine).and_then(|item| { 
                 handle_comments(item, app_domain, app_cache, app_state_machine);
                 app_state_machine.register_viewing_comments(); // viewing comments 
                 Some(0)
             });
         } else if verb == "expand" && has_numb {
-            safe_load_comment(numb, app_domain, app_cache, app_state_machine).and_then(|item| {
+            safe_load_comment(numb, app_cache).and_then(|item| {
                 app_state_machine.comments_page_index = 0; // reset comments index
                 handle_comments(item, app_domain, app_cache, app_state_machine);
                 app_state_machine.register_expanded_comment(); // expanded comments
@@ -259,9 +260,7 @@ fn safe_load_story(numb: usize,
 }
 
 fn safe_load_comment(numb: usize,
-                     app_domain: &mut AppDomain,
-                     mut app_cache: &mut AppCache,
-                     app_state_machine: &mut AppStateMachine)
+                     app_cache: &mut AppCache)
                      -> Option<HnItem> {
 
     let opt_numb = check_numb_against_comments(numb, app_cache);

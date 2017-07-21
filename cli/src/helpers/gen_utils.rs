@@ -1,4 +1,3 @@
-use hyper::{Uri};
 use core::models::HnItem;
 
 pub fn combine_strings(strings: Vec<&str>) -> String {

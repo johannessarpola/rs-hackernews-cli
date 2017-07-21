@@ -1,11 +1,12 @@
 use std::fs::File;
 use std::io::prelude::*;
-use std::io;
 
 pub fn read_file(path: &str) -> Option<String>  {
     let mut contents = String::new();
-    File::open(path)
-        .and_then(|mut file| file.read_to_string(&mut contents));
+    let file = File::open(path);
+    if file.is_ok() {
+        let result = file.unwrap().read_to_string(&mut contents); // todo do something with result?
+    }
     if contents.len() > 0 {
         Some(contents)
     }

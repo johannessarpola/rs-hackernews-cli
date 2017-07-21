@@ -25,7 +25,6 @@ pub fn log_written_file(logger: &Logger, success:bool, filename:&str) {
         }
 }
 
-
 pub fn log_stories_page_with_index(logger: &Logger, index: usize) {
     info!(logger,
           format!("Retrieved previous stories page with index {}", index));
