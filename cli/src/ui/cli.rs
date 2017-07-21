@@ -45,6 +45,10 @@ fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, Str
     }
 }
 
+pub fn print_warning_for_downloading_page() {
+    println!("Be careful when opening downloaded files, as this will just call curl on the page url without any checks for content");
+}
+
 pub fn could_not_get_any_commments_for_item(item: &HnItem) {
     println!("Could not get comments for item with id {}", item.id)
 }

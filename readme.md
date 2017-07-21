@@ -11,6 +11,7 @@ Commands to use:
 - load [num] = loads the page linked in the story as local html
 - open [num] = opens the link with default browser
 - exit = quits the application
+- help = prints out in-app help and command reference
 
 Working features:
 - Next and back viewing top stories, 10 at a time

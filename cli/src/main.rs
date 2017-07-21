@@ -119,21 +119,25 @@ fn gui_listener(cmd: UiCommand,
         } else if verb == "comments" && has_numb {
             safe_load_story(numb, app_domain, app_cache, app_state_machine).and_then(|item| {
                 handle_comments(item, app_domain, app_cache, app_state_machine);
-                app_state_machine.register_viewing_comments();
+                app_state_machine.register_viewing_comments(); // viewing comments 
                 Some(0)
             });
         } else if verb == "expand" && has_numb {
             safe_load_comment(numb, app_domain, app_cache, app_state_machine).and_then(|item| {
                 app_state_machine.comments_page_index = 0; // reset comments index
                 handle_comments(item, app_domain, app_cache, app_state_machine);
-                app_state_machine.register_expanded_comment();
+                app_state_machine.register_expanded_comment(); // expanded comments
                 Some(0)
             });
         } else if verb == "load" && has_numb {
+            cli::print_warning_for_downloading_page();
             download_page(numb, app_domain, app_cache, app_state_machine);
         } else if verb == "open" && has_numb {
             open_page(numb, app_domain, app_cache, app_state_machine);
             app_state_machine.register_opened_story();
+        }
+        else if verb == "help" {
+            println!("\n{}", helpers::io_utils::read_file("res/help.txt").unwrap_or("Could not load help.txt".to_string()));
         }
         // todo print help
         else {

@@ -4,6 +4,7 @@ This has some listing for features that would be cool
 - DONE: Parse the comments so that there's some rudimentary formatting based on the html tags like <p>...</p>
 - DONE: Get links in comment with a separate comment and remove the duplication (<a href="link">link</a>)
 - DONE: Show only 10 comments once like stories and use next/back with it
+- DONE: Limits to next and back with feedback to ui
 
 0.3.1:
 - Format comments to max length so less automatic word-wrap happens
