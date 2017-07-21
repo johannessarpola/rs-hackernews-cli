@@ -15,7 +15,7 @@ use slog::{Level, LevelFilter, DrainExt};
 use super::endpoint::HnNewsEndpoint;
 use super::models::{HnItem, HnListOfItems};
 use super::connector::HttpsConnector;
-use utils::comment_has_kids;
+use helpers::gen_utils::comment_has_kids;
 use formatting::formatter::Formatters;
 
 ///

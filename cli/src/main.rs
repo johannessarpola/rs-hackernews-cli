@@ -19,10 +19,8 @@ extern crate termion;
 extern crate native_tls;
 extern crate regex;
 
-mod utils;
 mod ui;
 mod decoding;
-mod logging_utils;
 mod formatting;
 mod core;
 mod helpers;
@@ -31,6 +29,7 @@ use core::app::*;
 use core::models::*;
 use core::client;
 use ui::cli;
+use helpers::logging_utils;
 
 use std::cmp::min;
 use tokio_core::reactor::Core;

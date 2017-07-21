@@ -1,5 +1,3 @@
-use utils;
-
 pub struct HnNewsEndpoint {
     base_url: String,
     top_news_suffix: String,
@@ -25,18 +23,24 @@ impl HnNewsEndpoint {
     }
 
     pub fn get_top_stories_path(&self) -> String {
-        utils::combine_strings(vec![&self.base_url, &self.top_news_suffix, &self.json_suffix])
+        combine_strings(vec![&self.base_url, &self.top_news_suffix, &self.json_suffix])
     }
     pub fn get_max_item_path(&self) -> String {
-        utils::combine_strings(vec![&self.base_url, &self.max_item_suffix, &self.json_suffix])
+        combine_strings(vec![&self.base_url, &self.max_item_suffix, &self.json_suffix])
     }
     pub fn get_item_path(&self, id: &str) -> String {
-        utils::combine_strings(vec![&self.base_url, &self.item_suffix, id, &self.json_suffix])
+        combine_strings(vec![&self.base_url, &self.item_suffix, id, &self.json_suffix])
     }
     pub fn get_new_stories_path(&self, id: &str) -> String {
-        utils::combine_strings(vec![&self.base_url, &self.new_items_suffix, id, &self.json_suffix])
+        combine_strings(vec![&self.base_url, &self.new_items_suffix, id, &self.json_suffix])
     }
     pub fn get_best_stories_path(&self) -> String {
-        utils::combine_strings(vec![&self.base_url, &self.best_items_suffix, &self.json_suffix])
+        combine_strings(vec![&self.base_url, &self.best_items_suffix, &self.json_suffix])
     }
+
+}
+
+fn combine_strings(strings: Vec<&str>) -> String {
+    let combine = strings.join("");
+    combine
 }

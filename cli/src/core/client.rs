@@ -12,9 +12,8 @@ use std::io::Write;
 use std::path::Path;
 
 use curl::easy::Easy;
-use logging_utils::{log_response_status, log_written_file};
-use utils::parse_url_from_str;
-use utils;
+use helpers::logging_utils::{log_response_status, log_written_file};
+use helpers::path_utils::{parse_url_from_str, generate_filename_for_hnitem};
 use super::models::*;
 use super::endpoint::HnNewsEndpoint;
 use super::app::{AppDomain, AppStates, AppStateMachine};
@@ -157,7 +156,7 @@ pub fn download_page_from_item(item: &HnItem,
     match item.url {
         // todo change to async
         Some(ref url) => {
-            let filename: String = utils::filename_for_hnitem(&item);
+            let filename: String = generate_filename_for_hnitem(&item);
             let path = Path::new(&filename);
             let mut file: File =
                 OpenOptions::new().write(true).create(true).open(path.as_os_str()).unwrap();
