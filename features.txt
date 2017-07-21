@@ -8,6 +8,11 @@ This has some listing for features that would be cool
 
 0.3.1:
 - Format comments to max length so less automatic word-wrap happens
+- Format preformatted (code snippets for example)
+- Add option to print all comments rather than 10 with extra-args in cli::backend::UiCommand
+- Add option to print comments without formatting with extra-args in cli::backend::UiCommand
 
 0.4.0:
 - Open nth link in comment with open when viewing comments (open {comment} {nth link (optional)}) (if not defined first)
+- Alter how many items are printed at once (10 now) from args
+- 
