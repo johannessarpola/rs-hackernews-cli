@@ -51,7 +51,7 @@ impl TagFormatter {
 
     fn replace_tags(&self, s: &str, replacement: &str) -> String {
         // will just replace all tags and should be called after other methods have run before
-        let re = Regex::new(r"(</?\w+((\s+\w+(\s*=\s*(?:\x22.*?\x22|'.*?'|[\^'\x22>\s]+))?)+\s*|\s*)/?>) *").unwrap();
+        let re = Regex::new(r"(</?\w+((\s+\w+(\s*=\s*(?:\x22.*?\x22|'.*?'|[\^'\x22>\s]+))?)+\s*|\s*)/?>)").unwrap();
         re.replace_all(s, replacement).into_owned()
     }
 }
@@ -88,10 +88,24 @@ mod test {
                                      rel=\"nofollow\">http://www.link.com</a>");
         s = tag_formatter.format_tags(&s);
         assert_eq!("this is http://www.link.com", s);
-        s = format!("<p> para </p><div>div </div> <h1>heading </h1>");
+        s = format!("<p>para </p><div>div </div><h1>heading </h1>");
         s = tag_formatter.format_tags(&s);
         assert_eq!("para div heading ", s);
     }
+    #[test]
+    fn test_formatting_with_item() {
+        use helpers::io_utils::read_file;
+        use serde_json;
+        use core::models::HnItem;
 
+        let tag_formatter = TagFormatter;
+
+        let unformatted_item:HnItem =  read_file("res/test/item-with-html.json")
+            .and_then(|content| Some(serde_json::from_str(&content).unwrap()))
+            .unwrap();
+        let formatted_text = read_file("res/test/formatted-item-with-html.txt").unwrap();
+        assert_eq!(formatted_text, tag_formatter.format(unformatted_item.text.as_ref().unwrap()));
+        // ;
+    }
 
 }

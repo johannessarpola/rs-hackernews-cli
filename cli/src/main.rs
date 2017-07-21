@@ -25,6 +25,7 @@ mod decoding;
 mod logging_utils;
 mod formatting;
 mod core;
+mod helpers;
 
 use core::app::*;
 use core::models::*;
