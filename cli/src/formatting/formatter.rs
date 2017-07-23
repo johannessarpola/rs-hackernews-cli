@@ -1,4 +1,5 @@
 use super::tag_formatter::TagFormatter;
+use super::general_formatter::GeneralFormatter;
 
 pub trait FormatStr {
     fn format(&self, s: &str) -> String;
@@ -12,7 +13,7 @@ impl Formatters {
 
     pub fn new() -> Formatters {
         Formatters {
-            formatters: vec!(Box::new(TagFormatter))
+            formatters: vec!(Box::new(TagFormatter), Box::new(GeneralFormatter))
         }
     }
 }

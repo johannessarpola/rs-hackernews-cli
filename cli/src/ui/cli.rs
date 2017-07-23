@@ -129,7 +129,7 @@ pub fn print_could_not_get_story(numb: usize) {
 fn create_comment_row(index: usize, item: &HnItem, format: &FormatStr) -> Option<String> {
     match item.text_unescaped() {
         Some(ref text) => {
-            let mut s = format!("[{:3}] {:70} \n    by {}", index, &format.format(text), &item.by);
+            let mut s = format!("[{:3}] {:70} by {}", index, &format.format(text), &item.by);
             match item.kids {
                 Some(ref kids) => s.push_str(&format!(" with [{:3}] comments", kids.len())),
                 None => (),
