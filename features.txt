@@ -7,12 +7,15 @@ This has some listing for features that would be cool
 - DONE: Limits to next and back with feedback to ui
 
 0.3.1:
-- Format comments to max length so less automatic word-wrap happens
+- DONE Format comments to max length so less automatic word-wrap happens
 - Format preformatted (code snippets for example)
 - Add option to print all comments rather than 10 with extra-args in cli::backend::UiCommand
 - Add option to print comments without formatting with extra-args in cli::backend::UiCommand
+- Add the url of the story somewhere
 
 0.4.0:
 - Open nth link in comment with open when viewing comments (open {comment} {nth link (optional)}) (if not defined first)
 - Alter how many items are printed at once (10 now) from args
-- 
+- Alter the width of terminal from args as well
+- Make it possible to use themes from args
+- Add shorthand commands like (e 1 and/or e1 = expand 1)
