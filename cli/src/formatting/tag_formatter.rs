@@ -31,8 +31,8 @@ impl TagFormatter {
     }
 
     pub fn format_code_tags(&self, s:&str) -> String {
-        let mut r = self.replace_opening_code_tags(s, "\n\t");
-        self.replace_closing_code_tags(&r, "")
+        let mut r = self.replace_opening_code_tags(s, "\n");
+        self.replace_closing_code_tags(&r, "\n") // make code blocks stand out
     }
 
     fn replace_paragraphs_closing_tags(&self, s: &str, replacement: &str) -> String {
@@ -67,7 +67,7 @@ impl TagFormatter {
     }
 
     fn replace_opening_code_tags(&self, s: &str, replacement: &str) -> String {
-        let re = Regex::new(r"( *<code> *)").unwrap();
+        let re = Regex::new(r"( *<code>)").unwrap();
         re.replace_all(s, replacement).into_owned()
     }
 }
