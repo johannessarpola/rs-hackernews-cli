@@ -1,0 +1,9 @@
+{
+  "by" : "sbierwagen",
+  "id" : 14841590,
+  "kids" : [ 14841683 ],
+  "parent" : 14841489,
+  "text" : "<p><pre><code>  $ curl -IA &quot;foo&quot; https:&#x2F;&#x2F;www.jwz.org&#x2F;gruntle&#x2F;nomo.html\n  HTTP&#x2F;1.1 200 OK\n  \n  $ curl -IA &quot;foo&quot; --referer &quot;news.ycombinator.com&quot; https:&#x2F;&#x2F;www.jwz.org&#x2F;gruntle&#x2F;nomo.html\n  HTTP&#x2F;1.1 302 Found\n  Location: http:&#x2F;&#x2F;i.imgur.com&#x2F;32R3qLv.png\n</code></pre>\nAre you using an addon that strips referer headers?",
+  "time" : 1500923171,
+  "type" : "comment"
+}

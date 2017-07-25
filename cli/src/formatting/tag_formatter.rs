@@ -5,8 +5,9 @@ pub struct TagFormatter;
 
 impl FormatStr for TagFormatter {
     fn format(&self, s: &str) -> String {
-        let r = self.format_paragraphs(s);
+        let mut r = self.format_paragraphs(s);
         // currently no special formatting for links so just format like other tags (remove)
+        r = self.format_code_tags(&r);
         self.format_tags(&r)
     }
 }
@@ -27,6 +28,11 @@ impl TagFormatter {
 
     pub fn format_tags(&self, s: &str) -> String {
         self.replace_tags(s, "")
+    }
+
+    pub fn format_code_tags(&self, s:&str) -> String {
+        let mut r = self.replace_opening_code_tags(s, "\n\t");
+        self.replace_closing_code_tags(&r, "")
     }
 
     fn replace_paragraphs_closing_tags(&self, s: &str, replacement: &str) -> String {
@@ -54,6 +60,16 @@ impl TagFormatter {
         let re = Regex::new(r"(</?\w+((\s+\w+(\s*=\s*(?:\x22.*?\x22|'.*?'|[\^'\x22>\s]+))?)+\s*|\s*)/?>)").unwrap();
         re.replace_all(s, replacement).into_owned()
     }
+
+    fn replace_closing_code_tags(&self, s: &str, replacement: &str) -> String {
+        let re = Regex::new(r"(</code> *)").unwrap();
+        re.replace_all(s, replacement).into_owned()
+    }
+
+    fn replace_opening_code_tags(&self, s: &str, replacement: &str) -> String {
+        let re = Regex::new(r"( *<code> *)").unwrap();
+        re.replace_all(s, replacement).into_owned()
+    }
 }
 #[cfg(test)]
 mod test {
@@ -71,7 +87,13 @@ mod test {
         assert_eq!("\npara", s);
     }
 
-
+    #[test] 
+    fn test_replace_codetags() {
+        let tag_formatter = TagFormatter;
+        let mut s = format!("<code> System.out.println(\"Hello world\"); </code>");
+        s = tag_formatter.format_code_tags(&s);
+        assert_eq!("\n\tSystem.out.println(\"Hello world\");", s);
+    }
     #[test]
     fn test_replace_links() {
         let tag_formatter = TagFormatter;
