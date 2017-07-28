@@ -90,9 +90,9 @@ mod test {
     #[test] 
     fn test_replace_codetags() {
         let tag_formatter = TagFormatter;
-        let mut s = format!("<code> System.out.println(\"Hello world\"); </code>");
+        let mut s = format!("<code>System.out.println(\"Hello world\");</code>");
         s = tag_formatter.format_code_tags(&s);
-        assert_eq!("\n\tSystem.out.println(\"Hello world\");", s);
+        assert_eq!("\nSystem.out.println(\"Hello world\");\n", s);
     }
     #[test]
     fn test_replace_links() {
