@@ -1,6 +1,7 @@
 use core::models::*;
 use super::colors;
 use formatting::formatter::FormatStr;
+use helpers::path_utils;
 
 const HELP_STR: &'static str  = "
 top             > opens the currently opened page of stories (reprints)
@@ -47,11 +48,13 @@ pub fn print_headline_with_author(item: &HnItem, index: &i32) {
 }
 
 fn create_headline_with_author(item: &HnItem, index: &i32) -> Result<String, String> {
+    let link = item.url.as_ref().and_then(|link| path_utils::get_host_from_link(link)).unwrap_or("could not parse link".to_owned());
     match item.title {
         Some(_) => {
+            let headline_with_link = format!("{} ({})",item.title.as_ref().unwrap(), link);
             let s = format!("[{:3}] {:70} by {} with [{}] comments",
                             index,
-                            item.title.as_ref().unwrap(),
+                            headline_with_link,
                             item.by,
                             item.kids.as_ref().unwrap_or(&Vec::new()).len());
             Ok(s)
