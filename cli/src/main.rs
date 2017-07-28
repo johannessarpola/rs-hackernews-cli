@@ -18,6 +18,7 @@ extern crate webbrowser;
 extern crate termion;
 extern crate native_tls;
 extern crate regex;
+extern crate url;
 
 mod ui;
 mod decoding;
