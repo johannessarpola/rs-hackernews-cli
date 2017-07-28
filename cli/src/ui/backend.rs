@@ -13,7 +13,7 @@ impl UiCommand {
         match msg {
             Ok(text) => {
                 let mut parts = text.split_whitespace().collect::<Vec<_>>().into_iter();
-                let command = Some(parts.next().unwrap_or("invalid").to_owned()); // todo will cause error if it's empty probably
+                let command = Some(parts.next().unwrap_or("invalid").to_owned());
                 let number = gen_utils::try_to_parse_number(parts.next());
                 let extra_args = parts.map(|s| String::from(s)).collect::<Vec<_>>();
 

@@ -18,11 +18,11 @@ impl<'de> Deserialize<'de> for HnListOfItems {
 fn default_user() -> String {
     String::from("Undefined user")
 }
-// TODO Add simple decision tree to deduct is it probably a post, comment or something different
+
 #[derive(Serialize, Deserialize)]
 pub struct HnItem {
     #[serde(default = "default_user")]
-    pub by: String, // TODO For some reason some 'by' are undefined, might be the case with removed comments
+    pub by: String,
     #[serde(skip_serializing_if="Option::is_none")]
     pub parent: Option<i32>,
     #[serde(skip_serializing_if="Option::is_none")]

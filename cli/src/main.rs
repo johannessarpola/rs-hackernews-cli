@@ -141,7 +141,6 @@ fn gui_listener(cmd: UiCommand,
         else if verb == "help" {
             cli::print_help();
         }
-        // todo print help
         else {
             cli::print_invalid_command();
         }
@@ -268,7 +267,7 @@ fn safe_load_comment(numb: usize,
     if opt_numb.is_none() {
         cli::print_invalid_numb();
     } else {
-        let act_numb = opt_numb.unwrap(); // todo did this handle index somewhere?
+        let act_numb = opt_numb.unwrap();
         if act_numb != numb {
             cli::print_over_limit_but_using_index(act_numb + 1);
         }
