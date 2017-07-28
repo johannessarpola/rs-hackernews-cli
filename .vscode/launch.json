@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug LLDB Cli",
+            "program": "${workspaceRoot}/cli/target/debug/rs-hackernews-cli",
+            "args": [],
+            "cwd": "${workspaceRoot}/cli/"
+        }
+    ]
+}
