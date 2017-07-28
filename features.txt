@@ -9,13 +9,13 @@ This has some listing for features that would be cool
 0.3.1:
 - DONE Format comments to max length so less automatic word-wrap happens
 - DONE Format preformatted (code snippets for example)
-- Add option to print all comments rather than 10 with extra-args in cli::backend::UiCommand
-- Add option to print comments without formatting with extra-args in cli::backend::UiCommand
 - DONE Add the url of the story somewhere
-- Handle all urls through url package since it's validates
+- DONE Handle all urls through url package since it's validates
 
 0.4.0:
 - Open nth link in comment with open when viewing comments (open {comment} {nth link (optional)}) (if not defined first)
+- Add option to print all comments rather than 10 with extra-args in cli::backend::UiCommand
+- Add option to print comments without formatting with extra-args in cli::backend::UiCommand
 - Alter how many items are printed at once (10 now) from args
 - Alter the width of terminal from args as well
 - Make it possible to use themes from args

@@ -1,12 +1,6 @@
-use hyper::Uri;
 use core::models::HnItem;
 use url::{Url, Host};
-
-pub fn parse_url_from_str(url_str: &str) -> Uri {
-    let url_str = String::from(url_str);
-    let url = url_str.parse::<Uri>().unwrap();
-    url
-}
+use std::path::Path;
 
 pub fn get_host_from_link(path: &str) -> Option<String> {
     let result = Url::parse(path);
@@ -21,14 +15,26 @@ pub fn get_host_from_link(path: &str) -> Option<String> {
     }
 }
 
+pub fn get_filesystem_safe_url_as_string(path: &str) -> Option<String> {
+    let url_result = Url::parse(path);
+    if (url_result.is_ok()) {
+        let url: Url = url_result.unwrap();
+        let url_str = format!("{}{}", url.host_str().unwrap_or("could_not_parse_host"), url.path());
+        let path_str = Path::new(&url_str).to_string_lossy().into_owned();
+        Some(format!("{}.html", path_str))
+    } else {
+        None
+    }
+
+}
+
 pub fn generate_filename_for_hnitem(item: &HnItem) -> String {
     match item.title {
         Some(ref title) => return combine_strings(vec![&title, &item.by, ".html"]),
         None => {
-            return combine_strings(vec![&parse_url_from_str(&item.url.as_ref().unwrap())
-                                            .path()
-                                            .replace("/", "_"),
-                                        ".html"])
+            let fname = get_filesystem_safe_url_as_string(&item.url.as_ref().unwrap())
+                .unwrap_or(String::from("could_not_create_filename.html"));
+            fname
         }
     }
 }
@@ -43,13 +49,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_url_from_str_test() {
-        let url = parse_url_from_str("http://www.google.fi");
-        assert_eq!("http", url.scheme().unwrap());
-        assert_eq!("www.google.fi", url.authority().unwrap());
-    }
-
-    #[test]
     fn get_host_from_link_test() {
         let mut s = "http://www.google.fi";
         let mut os = get_host_from_link(s);
@@ -58,5 +57,11 @@ mod tests {
         s = "abcabc";
         os = get_host_from_link(s);
         assert!(os.is_none());
+    }
+    #[test]
+    fn get_filesystem_safe_url_as_string_test() {
+        let mut s = "http://www.google.fi/search/";
+        let mut fs = get_filesystem_safe_url_as_string(s);
+        assert_eq!("www.google.fi/search/.html", fs.unwrap());
     }
 }

@@ -13,7 +13,7 @@ use std::path::Path;
 
 use curl::easy::Easy;
 use helpers::logging_utils::{log_response_status, log_written_file};
-use helpers::path_utils::{parse_url_from_str, generate_filename_for_hnitem};
+use helpers::path_utils::{generate_filename_for_hnitem};
 use super::models::*;
 use super::endpoint::HnNewsEndpoint;
 use super::app::{AppDomain, AppStates, AppStateMachine};
@@ -205,6 +205,11 @@ fn common_headers(req: &mut Request) {
     req.headers_mut().set(UserAgent::new("rs-hackernews-cli"));
 }
 
+fn parse_url_from_str(url_str: &str) -> Uri {
+    let url_str = String::from(url_str);
+    let url = url_str.parse::<Uri>().unwrap();
+    url
+}
 
 #[cfg(test)]
 mod tests {
@@ -267,5 +272,12 @@ mod tests {
         let comments: Vec<HnItem> = get_comments_for_item(&hnitem, &mut app_domain, &mut app_sm)
             .unwrap();
         assert!(comments.len() != 0);
+    }
+    
+    #[test]
+    fn parse_url_from_str_test() {
+        let url = parse_url_from_str("http://www.google.fi");
+        assert_eq!("http", url.scheme().unwrap());
+        assert_eq!("www.google.fi", url.authority().unwrap());
     }
 }
