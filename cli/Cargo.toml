@@ -1,6 +1,6 @@
 [package]
-name = "rs-hackernews-cli"
-version = "0.2.2"
+name = "hncli"
+version = "0.3.0"
 authors = ["Johannes Sarpola <johannes.sarpola@gmail.com>"]
 
 [dependencies]

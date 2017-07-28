@@ -11,7 +11,7 @@ This has some listing for features that would be cool
 - DONE Format preformatted (code snippets for example)
 - Add option to print all comments rather than 10 with extra-args in cli::backend::UiCommand
 - Add option to print comments without formatting with extra-args in cli::backend::UiCommand
-- Add the url of the story somewhere
+- DONE Add the url of the story somewhere
 - Handle all urls through url package since it's validates
 
 0.4.0:
