@@ -31,7 +31,7 @@ impl TagFormatter {
     }
 
     pub fn format_code_tags(&self, s:&str) -> String {
-        let mut r = self.replace_opening_code_tags(s, "\n");
+        let r = self.replace_opening_code_tags(s, "\n");
         self.replace_closing_code_tags(&r, "\n") // make code blocks stand out
     }
 

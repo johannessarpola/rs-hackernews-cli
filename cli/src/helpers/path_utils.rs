@@ -1,5 +1,5 @@
 use core::models::HnItem;
-use url::{Url, Host};
+use url::{Url};
 use std::path::Path;
 
 pub fn get_host_from_link(path: &str) -> Option<String> {
@@ -17,7 +17,7 @@ pub fn get_host_from_link(path: &str) -> Option<String> {
 
 pub fn get_filesystem_safe_url_as_string(path: &str) -> Option<String> {
     let url_result = Url::parse(path);
-    if (url_result.is_ok()) {
+    if url_result.is_ok() {
         let url: Url = url_result.unwrap();
         let url_str = format!("{}{}", url.host_str().unwrap_or("could_not_parse_host"), url.path());
         let path_str = Path::new(&url_str).to_string_lossy().into_owned();
@@ -60,8 +60,8 @@ mod tests {
     }
     #[test]
     fn get_filesystem_safe_url_as_string_test() {
-        let mut s = "http://www.google.fi/search/";
-        let mut fs = get_filesystem_safe_url_as_string(s);
+        let s = "http://www.google.fi/search/";
+        let fs = get_filesystem_safe_url_as_string(s);
         assert_eq!("www.google.fi/search/.html", fs.unwrap());
     }
 }

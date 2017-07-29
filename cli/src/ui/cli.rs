@@ -83,6 +83,10 @@ pub fn print_no_connection() {
     println!("Could not detect internet connection, please check it and try again");
 }
 
+pub fn print_invalid_state() {
+    println!("App has an invalid state, could cause problems.");
+}
+
 pub fn print_comments(item: &HnItem, comments: &Vec<&HnItem>, format: &FormatStr, index:usize) {
     let coloring = colors::CliColoring::new(colors::Theme::Disabled); // todo, probably from app_domain. Not working currently on Mac
 

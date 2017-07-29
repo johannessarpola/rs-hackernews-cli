@@ -30,6 +30,10 @@ pub fn log_stories_page_with_index(logger: &Logger, index: usize) {
           format!("Retrieved previous stories page with index {}", index));
 }
 
+pub fn log_invalid_state(logger: &Logger) {
+    warn!(logger, "Application went into invalid state");
+}
+
 pub fn log_exit(logger: &Logger) {
     info!(logger, "Exited application normally");
 }

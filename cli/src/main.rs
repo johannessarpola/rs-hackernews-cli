@@ -101,7 +101,8 @@ fn gui_listener(cmd: UiCommand,
             } else if app_state_machine.viewing_comments() {
                 handle_next_comments(app_domain, app_cache, app_state_machine);
             } else {
-                // todo wrong state, something went wrong
+                cli::print_invalid_state();
+                logging_utils::log_invalid_state(&app_domain.logger);
             }
         } else if verb == "back" {
             if app_state_machine.viewing_stories() {
@@ -109,7 +110,8 @@ fn gui_listener(cmd: UiCommand,
             } else if app_state_machine.viewing_comments() {
                 handle_previous_comments(app_domain, app_cache, app_state_machine);
             } else {
-                // todo wrong state, something went wrong
+                cli::print_invalid_state();
+                logging_utils::log_invalid_state(&app_domain.logger);
             }
         } else if verb == "top" {
             output_stories(app_domain, app_cache, app_state_machine);
@@ -133,9 +135,9 @@ fn gui_listener(cmd: UiCommand,
             });
         } else if verb == "load" && has_numb {
             cli::print_warning_for_downloading_page();
-            download_page(numb, app_domain, app_cache, app_state_machine);
+            handle_download_link(numb, app_domain, app_cache, app_state_machine);
         } else if verb == "open" && has_numb {
-            open_page(numb, app_domain, app_cache, app_state_machine);
+            handle_open_link(numb, app_domain, app_cache, app_state_machine);
             app_state_machine.register_opened_story();
         }
         else if verb == "help" {
@@ -303,7 +305,7 @@ fn retrieve_story(numb: usize,
     item
 }
 
-fn open_page(numb: usize,
+fn handle_open_link(numb: usize,
              app_domain: &mut AppDomain,
              app_cache: &mut AppCache,
              app_state_machine: &mut AppStateMachine) {
@@ -317,7 +319,7 @@ fn open_page(numb: usize,
     }
 }
 
-fn download_page(numb: usize,
+fn handle_download_link(numb: usize,
                  app_domain: &mut AppDomain,
                  app_cache: &mut AppCache,
                  app_state_machine: &mut AppStateMachine) {
