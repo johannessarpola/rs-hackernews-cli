@@ -1,9 +1,10 @@
 # CLI For HackerNews
 
-App is aimed to be a cli to 'browse' HackerNews from the comfort of terminal. This is a personal 'hackathon' project I started for fun and to learn some of the interesting things in Rust.
+App is aimed to be a cli to 'browse' HackerNews from the comfort of terminal. This is a personal 'hackathon' project I started for fun and to learn some of the interesting things in Rust with crates like Tokio, Hyper and some others.
 
-Commands to use:
-- top = opens the currently opened page of stories (reprints)
+## Commands to use
+
+- top = opens the currently opened page of stories (reprints as well)
 - next = retrieves the next 10 stories or comments
 - back = retrieves the previous 10 stories or comments
 - comments [num] = retrieves comments for given story, based on the id of the story shown in [num] ten at a time
@@ -13,14 +14,9 @@ Commands to use:
 - exit = quits the application
 - help = prints out in-app help and command reference
 
-Working features:
-- Next and back viewing top stories, 10 at a time
-- Downloading the linked page to local folder <sub>(currently just goes to root of the application)</sub>
-- Open the link with your default browser (should work with most OS's with the help of [webbrowser](https://crates.io/crates/webbrowser))
-- View comments for story and replies to comments
 
-Operations should be mostly working but there are some bugs still left in the code. Some are written down in errors.txt and some ideas for upcoming features are in features.txt.
+## Notes
+
+All the basic functionality should be working but there are some bugs. Some are written down in errors.txt and some ideas for upcoming features are in features.txt. Todos.txt is some meta-chores to be done. 
 
 Contributions and feedback are welcome!
-
-I've kept a manual bug tracking at errors.txt, but you can create tickets as well. There are some ideas for features in features.txt as well and the state of them.
