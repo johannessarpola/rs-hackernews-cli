@@ -1,13 +1,13 @@
 SOLVED BUG: thread 'main' panicked at 'called `Result::unwrap()` on an `Err` value: ErrorImpl { code: Message("missing field `by`"), line: 1, column: 83 }', src/libcore/result.rs:859
 note: Run with `RUST_BACKTRACE=1` for a backtrace. -> item.by can be null?
     - These appeared to happen when there were some ghost items which appeared as ids but had no text or anything else in them. Might be because user removed it.
-
 SOLVED BUG: There won't be any ui message printed when there are no comments for story or comment but the same comments get printed again.
 SOLVED(?) BUG: thread "'main' panicked at 'assertion failed: index < len', src/libcollections/vec.rs:768" which is caused when trying to expand comment over the index
 SOLVED BUG: https://hacker-news.firebaseio.com/v0/item/14805523.json?print=pretty > expand 18 > No comments for 14805523 or all were dead (probably spam
     - might be a problem with index after rework (was correct cause)
 SOLVED BUG: if no more comments and tries to next or back : next > No comments for 14810384 or all were dead (probably spam) 
 
+-- Not solved
 BUG: Will cause panic if there are no internet.
 BUG: 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Io(Error { repr: Custom(Custom { kind: BrokenPipe, error: StringError("broken pipe") }) })'
 - caused by chain comments x > next > back > top
@@ -15,3 +15,4 @@ BUG: 'main' panicked at 'called `Result::unwrap()` on an `Err` value: Io(Error {
 - this might be issue with broken pipe in mpsc
 BUG: ... 55, 49, 50, 51, 10, 37, 37, 69, 79, 70, 10], error: Utf8Error { valid_up_to: 10, error_len: Some(1) } }', src/libcore/result.rs:859
 - Caused by calling download on link which is a pdf for example
+BUG: "I don't know why this isn't documented: https://stackoverflow.com/questions/38423277/does-firebase-c..." links are getting cut out by formatting
