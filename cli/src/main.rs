@@ -15,7 +15,6 @@ extern crate tokio_tls;
 extern crate tokio_service;
 extern crate curl;
 extern crate webbrowser;
-extern crate termion;
 extern crate native_tls;
 extern crate regex;
 extern crate url;
@@ -312,6 +311,7 @@ fn handle_open_link(numb: usize,
     let s = format!("{}",
                     app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
+    println!("{}", item.url.as_ref().unwrap());
     if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok() {
         // todo cleanup
         logging_utils::log_open_page(&app_domain.logger, item.url.as_ref().unwrap());
