@@ -21,14 +21,12 @@ use super::app::{AppDomain, AppStates, AppStateMachine};
 pub fn get_top_story_ids(app_domain: &mut AppDomain,
                          state: &mut AppStateMachine)
                          -> Result<HnListOfItems, Error> {
-    let logger = &app_domain.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
     let endpoint = &app_domain.endpoint;
     let client = &app_domain.client;
     state.current_state = AppStates::RetrievingResults;
     let work = request_top_story_ids(&client, &endpoint)
         .and_then(|res| {
-            log_response_status(&logger,
-                                &endpoint.get_top_stories_path(),
+            log_response_status(&endpoint.get_top_stories_path(),
                                 &res.status().to_string());
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
@@ -56,14 +54,12 @@ pub fn get_item_by_id(item: &str,
                       state: &mut AppStateMachine)
                       -> Result<HnItem, Error> {
     // note kids in item are comments, parts not sure what it is
-    let logger = &app_domain.logger; // These need to be here as otherwise it'll cause mutable<>immutable borrow error
     let endpoint = &app_domain.endpoint;
     let client = &app_domain.client;
     state.current_state = AppStates::RetrievingResults;
     let work = request_item(&item, &client, &endpoint)
         .and_then(|res| {
-            log_response_status(&logger,
-                                &endpoint.get_item_path(&item),
+            log_response_status(&endpoint.get_item_path(&item),
                                 &res.status().to_string());
             res.body()
                 .fold(Vec::new(), |mut v, chunk| {
@@ -84,16 +80,12 @@ pub fn get_comments_for_item(item: &HnItem,
     match item.kids {
         Some(ref kids) => {
             let core = &mut app_domain.core;
-            let logger = &mut app_domain.logger; // These need to be mutable as otherwise it'll cause mutable<>immutable borrow error
             let endpoint = &mut app_domain.endpoint;
             let client = &mut app_domain.client;
             state.current_state = AppStates::RetrievingResults;
 
             let comments: &Vec<i32> = &kids;
-            info!(&logger,
-                  format!("Retrieving comments for {} with {} comments",
-                          &item.id,
-                          kids.len()));
+            info!("Retrieving comments for {} with {} comments", &item.id, kids.len());
             let items = comments.iter()
                 .map(|item_id| {
                     (item_id.to_string(), request_item(&item_id.to_string(), &client, &endpoint))
@@ -168,7 +160,7 @@ pub fn download_page_from_item(item: &HnItem,
             let page_as_string = String::from_utf8(page_content).unwrap(); // TODO errors
 
             let write_result = file.write_all(page_as_string.as_bytes());
-            log_written_file(&app_domain.logger, write_result.is_ok(), &filename);
+            log_written_file(write_result.is_ok(), &filename);
 
             Ok(String::from(path.as_os_str().to_str().unwrap())) // should probably be path to string
             // todo error if could not create
