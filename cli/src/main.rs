@@ -1,13 +1,9 @@
 // Unused mut warning is false in this context
-#[macro_use]
-extern crate slog;
-extern crate slog_term;
-extern crate slog_stream;
-
-#[macro_use]
-extern crate serde_derive;
-extern crate serde_json;
-extern crate serde;
+#[macro_use] extern crate log;
+#[macro_use] extern crate fern;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde_json;
+#[macro_use] extern crate serde;
 extern crate futures;
 extern crate hyper;
 extern crate tokio_core;
@@ -15,10 +11,10 @@ extern crate tokio_tls;
 extern crate tokio_service;
 extern crate curl;
 extern crate webbrowser;
-extern crate termion;
 extern crate native_tls;
 extern crate regex;
 extern crate url;
+extern crate chrono;
 
 mod ui;
 mod decoding;
@@ -48,7 +44,7 @@ fn main() {
     let mut app_state_machine: AppStateMachine = AppStateMachine::new();
     let mut main_core = Core::new().expect("Failed to create core");
 
-    info!(&app_domain.logger, "Application started");
+    info!("Application started");
     app_cache.retrieved_top_stories =
         client::get_top_story_ids(&mut app_domain, &mut app_state_machine).ok();
     output_stories(&mut app_domain, &mut app_cache, &mut app_state_machine);
@@ -65,7 +61,7 @@ fn main() {
         let option_cmd = UiCommand::parse(verb);
         match option_cmd {
             Some(cmd) => {
-                logging_utils::log_cmd(&app_domain.logger, &cmd);
+                logging_utils::log_cmd(&cmd);
                 gui_listener(cmd, &mut app_domain, &mut app_cache, &mut app_state_machine)
             }
             None => {
@@ -102,7 +98,7 @@ fn gui_listener(cmd: UiCommand,
                 handle_next_comments(app_domain, app_cache, app_state_machine);
             } else {
                 cli::print_invalid_state();
-                logging_utils::log_invalid_state(&app_domain.logger);
+                logging_utils::log_invalid_state();
             }
         } else if verb == "back" {
             if app_state_machine.viewing_stories() {
@@ -111,13 +107,13 @@ fn gui_listener(cmd: UiCommand,
                 handle_previous_comments(app_domain, app_cache, app_state_machine);
             } else {
                 cli::print_invalid_state();
-                logging_utils::log_invalid_state(&app_domain.logger);
+                logging_utils::log_invalid_state();
             }
         } else if verb == "top" {
             output_stories(app_domain, app_cache, app_state_machine);
             app_state_machine.register_viewing_stories();
         } else if verb == "exit" {
-            logging_utils::log_exit(&app_domain.logger);
+            logging_utils::log_exit();
             process::exit(0);
         } else if verb == "comments" && has_numb {
             // needs cache and state as they're retrieved from remote
@@ -216,8 +212,7 @@ fn print_and_log_stories(app_domain: &mut AppDomain,
                          app_cache: &mut AppCache,
                          app_state_machine: &mut AppStateMachine) {
     output_stories(app_domain, app_cache, app_state_machine);
-    logging_utils::log_stories_page_with_index(&app_domain.logger,
-                                               app_state_machine.listing_page_index);
+    logging_utils::log_stories_page_with_index(app_state_machine.listing_page_index);
     app_state_machine.register_viewing_stories();
 
 }
@@ -314,7 +309,7 @@ fn handle_open_link(numb: usize,
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
     if item.url.is_some() && webbrowser::open(&item.url.as_ref().unwrap()).is_ok() {
         // todo cleanup
-        logging_utils::log_open_page(&app_domain.logger, item.url.as_ref().unwrap());
+        logging_utils::log_open_page(item.url.as_ref().unwrap());
         println!("{} {}", "Opened browser to url", item.url.as_ref().unwrap()) // todo move to cli
     }
 }
@@ -323,21 +318,17 @@ fn handle_download_link(numb: usize,
                  app_domain: &mut AppDomain,
                  app_cache: &mut AppCache,
                  app_state_machine: &mut AppStateMachine) {
-    let s = format!("{}",
-                    app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]); // FIXME unsafe way to do this
+    let s = format!("{}", app_cache.retrieved_top_stories.as_ref().unwrap().values[numb]);
     let item = client::get_item_by_id(&s, app_domain, app_state_machine).unwrap();
     let filen = client::download_page_from_item(&item, app_domain, app_state_machine);
     match filen {
         Ok(n) => {
             cli::print_filename_of_loaded_page(&n, item.title.as_ref().unwrap());
-            logging_utils::log_loaded_page_locally(&app_domain.logger,
-                                                   item.url.as_ref().unwrap(),
-                                                   &n)
+            logging_utils::log_loaded_page_locally(item.url.as_ref().unwrap(), &n)
         }
         Err(e) => {
             cli::could_not_load_page(item.title.as_ref().unwrap());
-            warn!(&app_domain.logger,
-                  format!("Could not load page to file {}", e));
+            warn!("Could not load page to file {}", e);
         }
     }
 
@@ -367,7 +358,7 @@ fn output_stories(app_domain: &mut AppDomain,
 
     // This probably should not need all the parameters
     let top_stories = app_cache.retrieved_top_stories.as_ref().unwrap();
-    logging_utils::log_loaded_top_stories(&app_domain.logger, top_stories.values.len());
+    logging_utils::log_loaded_top_stories(top_stories.values.len());
     let skipped: usize = (app_state_machine.listing_page_index * 10) as usize;
     let mut index = 0 + skipped as i32;
 

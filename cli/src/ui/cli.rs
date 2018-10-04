@@ -1,5 +1,4 @@
 use core::models::*;
-use super::colors;
 use formatting::formatter::FormatStr;
 use helpers::path_utils;
 
@@ -88,8 +87,6 @@ pub fn print_invalid_state() {
 }
 
 pub fn print_comments(item: &HnItem, comments: &Vec<&HnItem>, format: &FormatStr, index:usize) {
-    let coloring = colors::CliColoring::new(colors::Theme::Disabled); // todo, probably from app_domain. Not working currently on Mac
-
     if comments.len() > 0 {
         match item.title {
             Some(ref title) => println!("Comments for item id {} with title {}", &item.id, title),
@@ -100,12 +97,7 @@ pub fn print_comments(item: &HnItem, comments: &Vec<&HnItem>, format: &FormatStr
             comment_index += 1;
             let res = create_comment_row(comment_index, &comment, format);
             if res.is_some() {
-                if comment_index % 2 == 0 {
-                    coloring.zebra_coloring();
-                }
-
                 println!("{}", res.unwrap());
-                coloring.reset_colors();
             } else {
                 comment_index -= 1;
             }
@@ -114,7 +106,6 @@ pub fn print_comments(item: &HnItem, comments: &Vec<&HnItem>, format: &FormatStr
         println!("No comments for {} or all were dead (probably spam)",
                  item.id);
     }
-    println!("") // this adds extra space after comments and prevent the input being interfered with bg coloring
 }
 
 pub fn print_no_comments_for(numb: usize) {

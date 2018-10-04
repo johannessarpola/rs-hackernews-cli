@@ -8,10 +8,10 @@ use hyper::{Client};
 use native_tls::TlsConnector;
 use tokio_core::reactor::{Core, Handle};
 
-use slog;
-use slog_term;
-use slog_stream;
-use slog::{Level, LevelFilter, DrainExt};
+use log;
+use std;
+use fern;
+use chrono;
 use super::endpoint::HnNewsEndpoint;
 use super::models::{HnItem, HnListOfItems};
 use super::connector::HttpsConnector;
@@ -25,13 +25,12 @@ pub struct AppDomain {
     pub core: Core,
     pub endpoint: HnNewsEndpoint,
     pub client: Client<HttpsConnector>,
-    pub logger: slog::Logger,
     pub formatters: Formatters,
 }
 
 impl AppDomain {
     pub fn new() -> AppDomain {
-        let logger = create_loggers();
+        initialize_loggers();
         let core = Core::new().expect("Failed to create core");
         let handle = core.handle();
         let client = configure_client(&handle);
@@ -41,7 +40,6 @@ impl AppDomain {
             core: core,
             endpoint: endpoint,
             client: client,
-            logger: logger,
             formatters: formatters,
         }
     }
@@ -168,18 +166,6 @@ impl AppStateMachine {
 
 struct AppLogFormat;
 
-impl slog_stream::Format for AppLogFormat {
-    fn format(&self,
-              io: &mut io::Write,
-              rinfo: &slog::Record,
-              _logger_values: &slog::OwnedKeyValueList)
-              -> io::Result<()> {
-        let msg = format!("{} - {}\n", rinfo.level(), rinfo.msg());
-        let _ = try!(io.write_all(msg.as_bytes()));
-        Ok(())
-    }
-}
-
 fn configure_client(handle: &Handle) -> Client<HttpsConnector> {
     let tls_cx = TlsConnector::builder().unwrap().build().unwrap();
     let mut connector = HttpsConnector {
@@ -193,21 +179,22 @@ fn configure_client(handle: &Handle) -> Client<HttpsConnector> {
 
 }
 
-fn create_loggers() -> slog::Logger {
-    let file = OpenOptions::new()
-        .read(false)
-        .write(true)
-        .append(true)
-        .create(true)
-        .open("app.log")
-        .unwrap();
-    let file_drain = slog_stream::stream(file, AppLogFormat);
-    let std_out_drain = slog_term::streamer().build();
-    // let logger = slog::Logger::root(slog::duplicate(console_drain, file_drain).fuse(), o!());
-    let logger =
-        slog::Logger::root(slog::Duplicate::new(LevelFilter::new(file_drain, Level::Info),
-                                                LevelFilter::new(std_out_drain, Level::Warning))
-                               .fuse(),
-                           o!());
-    logger
+fn initialize_loggers() -> Result<(), fern::InitError> {
+
+    // Configure logger at runtime
+    fern::Dispatch::new()
+        .format(|out, message, record| {
+            out.finish(format_args!(
+                "{}[{}][{}] {}",
+                chrono::Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+                record.target(),
+                record.level(),
+                message
+            ))
+        })
+        .level(log::LevelFilter::Debug)
+        .chain(fern::log_file("app.log")?)
+        .apply()?;
+    Ok(())
+
 }
